@@ -1,9 +1,10 @@
+'use client'
 import { useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Card } from './ui/card';
 import { Lock, Eye, EyeOff } from 'lucide-react';
-import { Link } from 'react-router';
+import Link from 'next/link';
 
 interface PasswordGateProps {
   invitationTitle: string;
@@ -125,7 +126,7 @@ export function PasswordGate({
         {/* Footer link */}
         <div className="text-center mt-8">
           <Link 
-            to="/" 
+            href="/" 
             className="text-white/50 hover:text-white/80 text-sm transition-colors"
           >
             Masz własne wydarzenie? Stwórz zaproszenie na Zaprolink

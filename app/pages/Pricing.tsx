@@ -1,4 +1,5 @@
-import { Link } from 'react-router';
+'use client'
+import Link from 'next/link';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
@@ -146,7 +147,7 @@ export default function Pricing() {
                 variant={plan.popular ? 'default' : 'outline'}
                 asChild
               >
-                <Link to="/onboarding/okazja">
+                <Link href="/onboarding/okazja">
                   Wybierz {plan.name}
                 </Link>
               </Button>

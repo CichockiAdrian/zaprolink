@@ -1,4 +1,5 @@
-import { Link } from 'react-router';
+'use client'
+import Link from 'next/link';
 import { Button } from '../components/ui/button';
 import { Home, Search } from 'lucide-react';
 
@@ -33,7 +34,7 @@ export default function NotFound() {
             className="bg-[#7C3AED] hover:bg-[#5B21B6] rounded-full px-8"
             asChild
           >
-            <Link to="/onboarding/okazja">
+            <Link href="/onboarding/okazja">
               <span className="mr-2">✨</span>
               Stwórz zaproszenie
             </Link>
@@ -44,7 +45,7 @@ export default function NotFound() {
             className="rounded-full px-8"
             asChild
           >
-            <Link to="/">
+            <Link href="/">
               <Home className="w-4 h-4 mr-2" />
               Wróć na start
             </Link>
@@ -63,7 +64,7 @@ export default function NotFound() {
             ].map((link) => (
               <Link
                 key={link.to}
-                to={link.to}
+                href={link.to}
                 className="text-sm text-[#7C3AED] hover:underline"
               >
                 {link.label}

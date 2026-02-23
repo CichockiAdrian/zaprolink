@@ -1,5 +1,6 @@
+'use client'
 import { useState } from 'react';
-import { Link } from 'react-router';
+import Link from 'next/link';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
@@ -123,7 +124,7 @@ export default function Dashboard() {
                   Moje zaproszenia
                 </h1>
                 <Button className="bg-[#7C3AED] hover:bg-[#5B21B6]" asChild>
-                  <Link to="/onboarding/okazja">
+                  <Link href="/onboarding/okazja">
                     <Plus className="w-4 h-4 mr-2" />
                     Nowe zaproszenie
                   </Link>
@@ -152,13 +153,13 @@ export default function Dashboard() {
                       </div>
                       <div className="flex gap-2">
                         <Button size="sm" variant="outline" className="flex-1" asChild>
-                          <Link to={`/builder/${inv.id}`}>
+                          <Link href={`/builder/${inv.id}`}>
                             <Edit className="w-3 h-3 mr-1" />
                             Edytuj
                           </Link>
                         </Button>
                         <Button size="sm" variant="outline" asChild>
-                          <Link to={`/${inv.slug}`} target="_blank">
+                          <Link href={`/${inv.slug}`} target="_blank">
                             <Eye className="w-3 h-3" />
                           </Link>
                         </Button>

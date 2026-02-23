@@ -1,4 +1,5 @@
-import { Link } from 'react-router';
+'use client'
+import Link from 'next/link';
 
 export function Footer() {
   return (
@@ -24,35 +25,35 @@ export function Footer() {
           <div>
             <h4 className="font-semibold mb-4">Oferta</h4>
             <ul className="space-y-2">
-              <li><Link to="/szablony" className="text-[#9CA3AF] hover:text-white transition-colors">Szablony</Link></li>
-              <li><Link to="/cennik" className="text-[#9CA3AF] hover:text-white transition-colors">Cennik</Link></li>
-              <li><Link to="/onboarding/okazja" className="text-[#9CA3AF] hover:text-white transition-colors">Stwórz zaproszenie</Link></li>
+              <li><Link href="/szablony" className="text-[#9CA3AF] hover:text-white transition-colors">Szablony</Link></li>
+              <li><Link href="/cennik" className="text-[#9CA3AF] hover:text-white transition-colors">Cennik</Link></li>
+              <li><Link href="/onboarding/okazja" className="text-[#9CA3AF] hover:text-white transition-colors">Stwórz zaproszenie</Link></li>
             </ul>
           </div>
           
           <div>
             <h4 className="font-semibold mb-4">Konto</h4>
             <ul className="space-y-2">
-              <li><Link to="/auth" className="text-[#9CA3AF] hover:text-white transition-colors">Zaloguj się</Link></li>
-              <li><Link to="/auth" className="text-[#9CA3AF] hover:text-white transition-colors">Zarejestruj się</Link></li>
-              <li><Link to="/dashboard" className="text-[#9CA3AF] hover:text-white transition-colors">Panel klienta</Link></li>
+              <li><Link href="/auth" className="text-[#9CA3AF] hover:text-white transition-colors">Zaloguj się</Link></li>
+              <li><Link href="/auth" className="text-[#9CA3AF] hover:text-white transition-colors">Zarejestruj się</Link></li>
+              <li><Link href="/dashboard" className="text-[#9CA3AF] hover:text-white transition-colors">Panel klienta</Link></li>
             </ul>
           </div>
           
           <div>
             <h4 className="font-semibold mb-4">Okazje</h4>
             <ul className="space-y-2">
-              <li><Link to="/szablony" className="text-[#9CA3AF] hover:text-white transition-colors">Ślub</Link></li>
-              <li><Link to="/szablony" className="text-[#9CA3AF] hover:text-white transition-colors">Urodziny</Link></li>
-              <li><Link to="/szablony" className="text-[#9CA3AF] hover:text-white transition-colors">Event firmowy</Link></li>
-              <li><Link to="/szablony" className="text-[#9CA3AF] hover:text-white transition-colors">Zobacz wszystkie</Link></li>
+              <li><Link href="/szablony" className="text-[#9CA3AF] hover:text-white transition-colors">Ślub</Link></li>
+              <li><Link href="/szablony" className="text-[#9CA3AF] hover:text-white transition-colors">Urodziny</Link></li>
+              <li><Link href="/szablony" className="text-[#9CA3AF] hover:text-white transition-colors">Event firmowy</Link></li>
+              <li><Link href="/szablony" className="text-[#9CA3AF] hover:text-white transition-colors">Zobacz wszystkie</Link></li>
             </ul>
           </div>
           
           <div>
             <h4 className="font-semibold mb-4">Pomoc</h4>
             <ul className="space-y-2">
-              <li><Link to="/blog" className="text-[#9CA3AF] hover:text-white transition-colors">Blog</Link></li>
+              <li><Link href="/blog" className="text-[#9CA3AF] hover:text-white transition-colors">Blog</Link></li>
               <li><a href="#" className="text-[#9CA3AF] hover:text-white transition-colors">FAQ</a></li>
               <li><a href="#" className="text-[#9CA3AF] hover:text-white transition-colors">Kontakt</a></li>
             </ul>

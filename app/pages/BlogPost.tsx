@@ -1,3 +1,4 @@
+'use client'
 import { Link, useParams } from 'react-router';
 import { Badge } from '../components/ui/badge';
 import { Card } from '../components/ui/card';
@@ -18,12 +19,12 @@ export default function BlogPost() {
       {/* Header */}
       <div className="bg-[#F9FAFB] border-b border-[#E5E7EB] py-6">
         <div className="max-w-4xl mx-auto px-6">
-          <Link to="/blog" className="inline-flex items-center text-[#6B7280] hover:text-[#111827] mb-4">
+          <Link href="/blog" className="inline-flex items-center text-[#6B7280] hover:text-[#111827] mb-4">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Wróć do bloga
           </Link>
           <div className="text-sm text-[#6B7280]">
-            <Link to="/blog" className="hover:text-[#111827]">Blog</Link>
+            <Link href="/blog" className="hover:text-[#111827]">Blog</Link>
             {' > '}
             <span className="text-[#9CA3AF]">Porady</span>
             {' > '}
@@ -125,7 +126,7 @@ export default function BlogPost() {
             className="bg-white text-[#7C3AED] hover:bg-[#F9FAFB] rounded-full px-8"
             asChild
           >
-            <Link to="/onboarding/okazja">
+            <Link href="/onboarding/okazja">
               Zacznij za darmo <ChevronRight className="ml-1 w-4 h-4" />
             </Link>
           </Button>
@@ -139,7 +140,7 @@ export default function BlogPost() {
           <div className="grid md:grid-cols-3 gap-6">
             {relatedPosts.map((post) => (
               <Card key={post.slug} className="group overflow-hidden border-[#E5E7EB] hover:shadow-xl transition-shadow">
-                <Link to={`/blog/${post.slug}`}>
+                <Link href={`/blog/${post.slug}`}>
                   <div className="aspect-video overflow-hidden">
                     <img 
                       src={post.image}

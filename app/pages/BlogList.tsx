@@ -1,4 +1,5 @@
-import { Link } from 'react-router';
+'use client'
+import Link from 'next/link';
 import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
@@ -95,7 +96,7 @@ export default function BlogList() {
 
         {/* Featured Post */}
         <Card className="mb-16 overflow-hidden border-[#E5E7EB] hover:shadow-xl transition-shadow">
-          <Link to={`/blog/${featuredPost.slug}`}>
+          <Link href={`/blog/${featuredPost.slug}`}>
             <div className="grid md:grid-cols-2 gap-0">
               <div className="aspect-[4/3] md:aspect-auto overflow-hidden">
                 <img 
@@ -147,7 +148,7 @@ export default function BlogList() {
         <div className="grid md:grid-cols-3 gap-6 mb-12">
           {regularPosts.map((post) => (
             <Card key={post.id} className="group overflow-hidden border-[#E5E7EB] hover:shadow-xl transition-shadow">
-              <Link to={`/blog/${post.slug}`}>
+              <Link href={`/blog/${post.slug}`}>
                 <div className="aspect-video overflow-hidden">
                   <img 
                     src={post.image}
@@ -189,7 +190,7 @@ export default function BlogList() {
             Zacznij za darmo i zobacz jak to proste!
           </p>
           <Link 
-            to="/onboarding/okazja"
+            href="/onboarding/okazja"
             className="inline-flex items-center justify-center px-6 py-3 bg-[#7C3AED] text-white rounded-full hover:bg-[#5B21B6] transition-colors"
           >
             Stwórz zaproszenie — od 29 zł

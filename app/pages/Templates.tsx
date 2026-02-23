@@ -1,5 +1,6 @@
+'use client'
 import { useState } from 'react';
-import { Link } from 'react-router';
+import Link from 'next/link';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
@@ -73,13 +74,13 @@ export default function Templates() {
                 />
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                   <Button variant="secondary" size="sm" asChild>
-                    <Link to={`/kasia-i-maciek`} target="_blank">
+                    <Link href={`/kasia-i-maciek`} target="_blank">
                       <Eye className="w-4 h-4 mr-2" />
                       Podgląd
                     </Link>
                   </Button>
                   <Button size="sm" className="bg-[#7C3AED] hover:bg-[#5B21B6]" asChild>
-                    <Link to="/onboarding/okazja">
+                    <Link href="/onboarding/okazja">
                       Użyj
                     </Link>
                   </Button>
@@ -108,7 +109,7 @@ export default function Templates() {
             Nie możesz się zdecydować? Zacznij od dowolnego szablonu - zawsze możesz go zmienić!
           </p>
           <Button size="lg" className="bg-[#7C3AED] hover:bg-[#5B21B6] rounded-full" asChild>
-            <Link to="/onboarding/okazja">
+            <Link href="/onboarding/okazja">
               Zacznij tworzyć <ChevronRight className="ml-1 w-4 h-4" />
             </Link>
           </Button>

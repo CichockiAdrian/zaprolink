@@ -1,5 +1,6 @@
+'use client'
 import { useState } from 'react';
-import { Link } from 'react-router';
+import Link from 'next/link';
 import { Button } from '../components/ui/button';
 import { Switch } from '../components/ui/switch';
 import { Input } from '../components/ui/input';
@@ -73,13 +74,13 @@ export default function Builder() {
       <div className="h-12 bg-white border-b border-[#E5E7EB] flex items-center px-6 justify-between">
         {/* Left */}
         <div className="flex items-center gap-4">
-          <Link to="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <div className="w-6 h-6 bg-gradient-to-br from-[#7C3AED] to-[#5B21B6] rounded flex items-center justify-center">
               <span className="text-white font-['Playfair_Display'] font-bold text-sm">Z</span>
             </div>
           </Link>
           <div className="flex items-center gap-2 text-sm text-[#6B7280]">
-            <Link to="/dashboard" className="hover:text-[#111827]">Moje projekty</Link>
+            <Link href="/dashboard" className="hover:text-[#111827]">Moje projekty</Link>
             <ChevronRight className="w-4 h-4" />
             <span className="text-[#111827] font-medium">Kasia & Maciek</span>
           </div>
@@ -90,13 +91,13 @@ export default function Builder() {
           <button className="text-sm font-medium text-[#7C3AED] border-b-2 border-[#7C3AED] pb-1">
             Edycja
           </button>
-          <Link to="/dashboard?tab=rsvp" className="text-sm text-[#6B7280] hover:text-[#111827]">
+          <Link href="/dashboard?tab=rsvp" className="text-sm text-[#6B7280] hover:text-[#111827]">
             RSVP
           </Link>
-          <Link to="/dashboard?tab=analytics" className="text-sm text-[#6B7280] hover:text-[#111827]">
+          <Link href="/dashboard?tab=analytics" className="text-sm text-[#6B7280] hover:text-[#111827]">
             Analytics
           </Link>
-          <Link to="/dashboard?tab=qr" className="text-sm text-[#6B7280] hover:text-[#111827]">
+          <Link href="/dashboard?tab=qr" className="text-sm text-[#6B7280] hover:text-[#111827]">
             QR & Link
           </Link>
         </div>
@@ -110,7 +111,7 @@ export default function Builder() {
             </div>
           )}
           <Button variant="ghost" size="sm" asChild>
-            <Link to="/kasia-i-maciek" target="_blank">
+            <Link href="/kasia-i-maciek" target="_blank">
               <Eye className="w-4 h-4 mr-2" />
               Podgląd publiczny
             </Link>

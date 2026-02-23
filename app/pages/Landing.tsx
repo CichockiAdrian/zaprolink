@@ -1,4 +1,5 @@
-import { Link } from 'react-router';
+'use client'
+import Link from 'next/link';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { 
@@ -18,7 +19,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { Card } from '../components/ui/card';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 
 const occasions = [
   { emoji: '💍', name: 'Ślub / Wesele', gradient: 'from-pink-500 to-rose-500' },
@@ -77,7 +78,7 @@ export default function Landing() {
                   className="rounded-full bg-[#7C3AED] hover:bg-[#5B21B6] px-8"
                   asChild
                 >
-                  <Link to="/onboarding/okazja">
+                  <Link href="/onboarding/okazja">
                     Stwórz za darmo → 
                   </Link>
                 </Button>
@@ -87,7 +88,7 @@ export default function Landing() {
                   className="rounded-full"
                   asChild
                 >
-                  <Link to="/kasia-i-maciek">Jak to działa?</Link>
+                  <Link href="/kasia-i-maciek">Jak to działa?</Link>
                 </Button>
               </div>
               
@@ -229,7 +230,7 @@ export default function Landing() {
           
           <div className="text-center mt-8">
             <Button variant="outline" size="lg" asChild>
-              <Link to="/szablony">
+              <Link href="/szablony">
                 Zobacz wszystkie szablony <ChevronRight className="ml-1 w-4 h-4" />
               </Link>
             </Button>
@@ -371,7 +372,7 @@ export default function Landing() {
             className="rounded-full bg-white text-[#7C3AED] hover:bg-[#F9FAFB] px-8"
             asChild
           >
-            <Link to="/onboarding/okazja">
+            <Link href="/onboarding/okazja">
               Stwórz zaproszenie za darmo →
             </Link>
           </Button>
