@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useRouter } from 'next/navigation'
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -8,7 +8,7 @@ import { Card } from '../components/ui/card';
 import { Check } from 'lucide-react';
 
 export default function OnboardingEdycja() {
-  const navigate = useNavigate();
+  const router = useRouter()
   const [formData, setFormData] = useState({
     eventName: '',
     eventDate: '',
@@ -18,7 +18,7 @@ export default function OnboardingEdycja() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // In a real app, this would save the data and pass it to the builder
-    navigate('/builder/new');
+    router.push('/builder/new')
   };
 
   return (

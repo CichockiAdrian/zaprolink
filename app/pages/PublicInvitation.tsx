@@ -28,8 +28,10 @@ export default function PublicInvitation() {
   const [isPasswordProtected] = useState(false); // Set to true to enable password gate
   const [isUnlocked, setIsUnlocked] = useState(() => {
     // Check if already unlocked in this session
+    if (typeof window === 'undefined') return false;
     return sessionStorage.getItem('invitation_unlocked') === 'true';
   });
+  
   const correctPassword = 'wesele2026'; // In real app, this would come from database
 
   const handleSubmit = (e: React.FormEvent) => {

@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useRouter } from 'next/navigation';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -9,20 +9,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Card } from '../components/ui/card';
 
 export default function Auth() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     // Mock login - redirect to dashboard
-    navigate('/dashboard');
+    router.push('/dashboard');
   };
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
     // Mock register - redirect to dashboard
-    navigate('/dashboard');
+    router.push('/dashboard');
   };
 
   return (

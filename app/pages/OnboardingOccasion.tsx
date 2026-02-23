@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useRouter } from 'next/navigation';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Check } from 'lucide-react';
@@ -20,11 +20,11 @@ const occasions = [
 
 export default function OnboardingOccasion() {
   const [selected, setSelected] = useState<string | null>(null);
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleNext = () => {
     if (selected) {
-      navigate('/onboarding/szablon');
+      router.push('/onboarding/szablon');
     }
   };
 
@@ -97,8 +97,7 @@ export default function OnboardingOccasion() {
           <Button 
             variant="outline" 
             size="lg"
-            onClick={() => navigate('/')}
-          >
+            onClick={() => router.push('/')}>
             Wróć
           </Button>
           <Button

@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useRouter } from 'next/navigation';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
@@ -53,11 +53,11 @@ const templates = [
 
 export default function OnboardingTemplate() {
   const [selected, setSelected] = useState<string | null>(null);
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleNext = () => {
     if (selected) {
-      navigate('/onboarding/edycja');
+      router.push('/onboarding/edycja');
     }
   };
 
