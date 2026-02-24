@@ -108,7 +108,7 @@ export default function OnboardingEdycja() {
                   type="button"
                   variant="outline"
                   size="lg"
-                  onClick={() => navigate('/onboarding/szablon')}
+                  onClick={() => router.push('/onboarding/szablon')}
                   className="flex-1"
                 >
                   ← Wróć
