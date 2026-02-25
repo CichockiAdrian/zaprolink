@@ -1,10 +1,6 @@
-// app/pages/BlogListServer.tsx
-// Server Component - czyta pliki MD z content/blog/
-
 import Link from 'next/link';
 import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
-import { Clock, ArrowRight } from 'lucide-react';
 import { getAllPosts, getFeaturedPost, categories } from '../lib/blog';
 import BlogFilters from '../components/BlogFilters';
 
@@ -14,7 +10,10 @@ export default async function BlogListServer() {
     getFeaturedPost(),
   ]);
 
-  const regularPosts = allPosts.filter((p) => p.slug !== featuredPost?.slug);
+  // Wyróżniony nie pojawia się w siatce — BlogFilters go obsługuje osobno
+  const regularPosts = featuredPost
+    ? allPosts.filter((p) => p.slug !== featuredPost.slug)
+    : allPosts;
 
   return (
     <div className="min-h-screen bg-white py-20">
@@ -31,41 +30,16 @@ export default async function BlogListServer() {
           </p>
         </div>
 
-        {/* Wyróżniony post */}
-        {featuredPost && (
-          <Card className="mb-16 overflow-hidden border-[#E5E7EB] hover:shadow-xl transition-shadow">
-            <Link href={`/blog/${featuredPost.slug}`}>
-              <div className="grid md:grid-cols-2 gap-0">
-                <div className="aspect-[4/3] md:aspect-auto overflow-hidden">
-                  <img
-                    src={featuredPost.image}
-                    alt={featuredPost.title}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-                <div className="p-8 flex flex-col justify-center">
-                  <Badge className="w-fit mb-3 bg-[#7C3AED] text-white border-none">
-                    ⭐ Wyróżnione
-                  </Badge>
-                  <h2 className="font-['Playfair_Display'] text-3xl font-bold text-[#111827] mb-3">
-                    {featuredPost.title}
-                  </h2>
-                  <p className="text-[#6B7280] mb-4 line-clamp-2">{featuredPost.excerpt}</p>
-                  <div className="flex items-center gap-4 text-sm text-[#9CA3AF]">
-                    <Badge variant="outline">{featuredPost.category}</Badge>
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      <span>{featuredPost.readTime}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Link>
-          </Card>
+        {/* Filtry + wyróżniony + siatka (wszystko w client component) */}
+        {featuredPost ? (
+          <BlogFilters
+            posts={regularPosts}
+            featuredPost={featuredPost}
+            categories={[...categories]}
+          />
+        ) : (
+          <p className="text-center text-[#9CA3AF]">Brak artykułów</p>
         )}
-
-        {/* Filtry + siatka (client component) */}
-        <BlogFilters posts={regularPosts} categories={[...categories]} />
 
         {/* CTA */}
         <Card className="mt-12 p-8 bg-gradient-to-br from-[#EDE9FE] to-[#FEF3C7] border-none text-center">
