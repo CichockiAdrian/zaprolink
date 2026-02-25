@@ -5,15 +5,8 @@ import { Badge } from '../components/ui/badge';
 import { 
   Check, 
   MapPin, 
-  Calendar, 
   Share2, 
   Sparkles,
-  Heart,
-  PartyPopper,
-  GraduationCap,
-  Briefcase,
-  Monitor,
-  Home,
   ChevronRight,
   Star,
   ArrowRight
@@ -21,65 +14,107 @@ import {
 import { Card } from '../components/ui/card';
 import { motion } from 'framer-motion';
 
-const occasions = [
-  { emoji: '💍', name: 'Ślub / Wesele', gradient: 'from-pink-500 to-rose-500' },
-  { emoji: '🥂', name: 'Poprawiny', gradient: 'from-amber-500 to-orange-500' },
-  { emoji: '👰', name: 'Wieczór panieński', gradient: 'from-purple-500 to-pink-500' },
-  { emoji: '🎉', name: 'Urodziny', gradient: 'from-blue-500 to-cyan-500' },
-  { emoji: '🕊', name: 'Komunia / Chrzest', gradient: 'from-sky-400 to-blue-500' },
-  { emoji: '🎓', name: 'Studniówka', gradient: 'from-indigo-500 to-purple-500' },
-  { emoji: '🏢', name: 'Event firmowy', gradient: 'from-slate-600 to-slate-800' },
-  { emoji: '💻', name: 'Webinar', gradient: 'from-teal-500 to-emerald-500' },
-  { emoji: '🏠', name: 'Parapetówka', gradient: 'from-green-500 to-lime-500' },
-  { emoji: '🎄', name: 'Spotkanie świąteczne', gradient: 'from-red-500 to-green-600' },
-];
-
-const templates = [
-  { name: 'Elegant', style: 'Klasyczny', preview: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=400' },
-  { name: 'Modern', style: 'Nowoczesny', preview: 'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=400' },
-  { name: 'Kwiatowy', style: 'Romantyczny', preview: 'https://images.unsplash.com/photo-1478146896981-b80fe463b330?w=400' },
-  { name: 'Dark', style: 'Elegancki', preview: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=400' },
-];
-
-const testimonials = [
-  { name: 'Anna i Marek', text: 'Absolutnie rewelacyjne! Goście byli zachwyceni. Nie musieliśmy nikomu osobno wysyłać adresu i programu.', rating: 5 },
-  { name: 'Kasia', text: 'Na urodziny 30-tki idealne rozwiązanie. Link wrzuciłam na story i wszystko załatwione!', rating: 5 },
-  { name: 'Robert - event manager', text: 'Używam do firmowych eventów. Świetna sprawa, goście potwierdzają obecność online. Polecam!', rating: 5 },
-];
-
 export default function Landing() {
   return (
     <div className="bg-white">
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-b from-[#F9FAFB] to-white py-20 lg:py-32">
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-12">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left Column */}
+        {/* Dekoracyjne tło */}
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#EDE9FE]/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#EDE9FE]/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3 pointer-events-none" />
+
+        <div className="max-w-[1280px] mx-auto px-6 lg:px-12 relative">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+
+            {/* LEWA strona — mockup telefonu */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="relative order-2 lg:order-1"
+            >
+              {/* Floating badge nad telefonem */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.7 }}
+                className="absolute -top-4 -left-4 z-10 bg-white rounded-2xl shadow-lg px-4 py-3 flex items-center gap-2 border border-gray-100"
+              >
+                <span className="text-xl">💌</span>
+                <div>
+                  <p className="text-xs font-semibold text-[#111827]">Nowe RSVP!</p>
+                  <p className="text-xs text-[#6B7280]">Anna potwierdza obecność</p>
+                </div>
+              </motion.div>
+
+              {/* Floating badge pod telefonem */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.9 }}
+                className="absolute -bottom-4 -right-4 z-10 bg-white rounded-2xl shadow-lg px-4 py-3 flex items-center gap-3 border border-gray-100"
+              >
+                <div className="flex -space-x-2">
+                  {['A','M','K','P'].map((l, i) => (
+                    <div key={i} className="w-7 h-7 rounded-full bg-[#EDE9FE] border-2 border-white flex items-center justify-center text-xs font-bold text-[#7C3AED]">{l}</div>
+                  ))}
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-[#111827]">47 potwierdzeń</p>
+                  <p className="text-xs text-[#6B7280]">z 60 zaproszonych</p>
+                </div>
+              </motion.div>
+
+              <div className="relative mx-auto w-[280px] lg:w-[320px]">
+                <div className="relative bg-[#111827] rounded-[40px] p-3 shadow-2xl">
+                  <div className="bg-white rounded-[32px] overflow-hidden">
+                    <div className="bg-[#1F2937] px-4 py-2.5 flex items-center gap-2">
+                      <div className="flex gap-1.5">
+                        <div className="w-2 h-2 rounded-full bg-white/20" />
+                        <div className="w-2 h-2 rounded-full bg-white/20" />
+                        <div className="w-2 h-2 rounded-full bg-white/20" />
+                      </div>
+                      <div className="flex-1 bg-white/10 rounded-full px-3 py-1 text-xs text-white/60 text-center">
+                        zaprolink.pl/kasia-i-maciek
+                      </div>
+                    </div>
+                    <img 
+                      src="https://images.unsplash.com/photo-1750208759710-248f62d51b23?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxlbGVnYW50JTIwd2VkZGluZyUyMGludml0YXRpb24lMjBzbWFydHBob25lfGVufDF8fHx8MTc3MTY3NDMxNHww&ixlib=rb-4.1.0&q=80&w=1080"
+                      alt="Zaproszenie demo"
+                      className="w-full h-[480px] object-cover"
+                    />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* PRAWA strona — tekst */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
+              className="order-1 lg:order-2"
             >
               <Badge className="mb-6 bg-[#EDE9FE] text-[#7C3AED] border-none">
-                Cyfrowe zaproszenie na każdą okazję
+                ✨ Cyfrowe zaproszenie na każdą okazję
               </Badge>
               
               <h1 className="font-['Playfair_Display'] text-5xl lg:text-6xl font-bold text-[#111827] mb-6 leading-tight">
-                Zaproś bliskich jednym linkiem.
+                Zaproś bliskich<br />jednym linkiem.
               </h1>
               
               <p className="text-lg text-[#6B7280] mb-8 leading-relaxed">
                 Stwórz piękne zaproszenie online w 5 minut. Bez drukarni, bez wysyłki. Wyślij link lub QR — goście mają wszystko w jednym miejscu.
               </p>
               
-              <div className="flex flex-col sm:flex-row gap-4 mb-8">
+              <div className="flex flex-col sm:flex-row gap-4 mb-10">
                 <Button 
                   size="lg" 
-                  className="rounded-full bg-[#7C3AED] hover:bg-[#5B21B6] px-8"
+                  className="rounded-full bg-[#7C3AED] hover:bg-[#5B21B6] px-8 shadow-lg shadow-purple-200"
                   asChild
                 >
                   <Link href="/onboarding/okazja">
-                    Stwórz za darmo → 
+                    Stwórz za darmo →
                   </Link>
                 </Button>
                 <Button 
@@ -88,51 +123,42 @@ export default function Landing() {
                   className="rounded-full"
                   asChild
                 >
-                  <Link href="/kasia-i-maciek">Jak to działa?</Link>
+                  <Link href="/kasia-i-maciek">Zobacz przykład</Link>
                 </Button>
               </div>
+
+              {/* Social proof inline */}
+              <div className="flex items-center gap-3 mb-6 pb-6 border-b border-gray-100">
+                <div className="flex -space-x-2">
+                  {['A','M','K','R','P'].map((l, i) => (
+                    <div key={i} className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 border-2 border-white flex items-center justify-center text-xs font-bold text-white">{l}</div>
+                  ))}
+                </div>
+                <p className="text-sm text-[#6B7280]">
+                  Dołączyło już <span className="font-semibold text-[#111827]">2 400+</span> par i organizatorów
+                </p>
+              </div>
               
-              <div className="flex flex-wrap gap-6 text-sm text-[#6B7280]">
+              <div className="flex flex-wrap gap-x-6 gap-y-3 text-sm text-[#6B7280]">
                 <div className="flex items-center gap-2">
-                  <Check className="w-5 h-5 text-[#10B981]" />
+                  <Check className="w-4 h-4 text-[#10B981]" />
                   <span>Od 29 zł jednorazowo</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Check className="w-5 h-5 text-[#10B981]" />
+                  <Check className="w-4 h-4 text-[#10B981]" />
                   <span>Bez abonamentu</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Check className="w-5 h-5 text-[#10B981]" />
+                  <Check className="w-4 h-4 text-[#10B981]" />
                   <span>Ślub, urodziny, chrzciny i więcej</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-[#10B981]" />
+                  <span>14 dni zwrotu</span>
                 </div>
               </div>
             </motion.div>
 
-            {/* Right Column - Mockup */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="relative"
-            >
-              <div className="relative mx-auto w-[300px] lg:w-[350px]">
-                {/* Phone Frame */}
-                <div className="relative bg-[#111827] rounded-[40px] p-3 shadow-2xl">
-                  <div className="bg-white rounded-[32px] overflow-hidden">
-                    {/* URL Bar */}
-                    <div className="bg-[#F9FAFB] px-4 py-2 text-xs text-[#6B7280] border-b border-[#E5E7EB]">
-                      zaprolink.pl/kasia-i-maciek
-                    </div>
-                    {/* Content */}
-                    <img 
-                      src="https://images.unsplash.com/photo-1750208759710-248f62d51b23?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxlbGVnYW50JTIwd2VkZGluZyUyMGludml0YXRpb24lMjBzbWFydHBob25lfGVufDF8fHx8MTc3MTY3NDMxNHww&ixlib=rb-4.1.0&q=80&w=1080"
-                      alt="Zaproszenie demo"
-                      className="w-full h-[500px] object-cover"
-                    />
-                  </div>
-                </div>
-              </div>
-            </motion.div>
           </div>
         </div>
       </section>
@@ -194,7 +220,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* NEW: Szablony Preview Section */}
+      {/* Szablony Preview Section */}
       <section className="py-20 bg-[#F9FAFB]">
         <div className="max-w-[1280px] mx-auto px-6 lg:px-12">
           <Badge className="mb-4 mx-auto block w-fit bg-[#EDE9FE] text-[#7C3AED] border-none">
@@ -238,7 +264,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* NEW: Social Proof Section */}
+      {/* Social Proof Section */}
       <section className="py-20 bg-white">
         <div className="max-w-[1280px] mx-auto px-6 lg:px-12">
           <div className="text-center mb-12">
@@ -280,7 +306,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* NEW: Twórz i Zarabiaj Section */}
+      {/* Twórz i Zarabiaj Section — POPRAWIONA */}
       <section className="py-20 bg-gradient-to-br from-[#5B21B6] to-[#7C3AED] text-white">
         <div className="max-w-[1280px] mx-auto px-6 lg:px-12">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -307,17 +333,23 @@ export default function Landing() {
                   </li>
                 ))}
               </ul>
-              <div className="flex items-baseline gap-4 mb-8">
-                <div>
-                  <span className="text-5xl font-bold">200 zł</span>
-                  <span className="text-white/80 ml-2">/ rok</span>
-                </div>
+
+              {/* ZMIENIONA CENA — zgodna z planem Pro */}
+              <div className="flex items-baseline gap-2 mb-8">
+                <span className="text-5xl font-bold">89 zł</span>
+                <span className="text-white/80 text-lg">/ miesiąc</span>
+                <span className="text-white/50 text-sm ml-2">w planie Pro</span>
               </div>
-              <Button 
-                size="lg" 
+
+              {/* ZMIENIONY BUTTON — prowadzi do /cennik */}
+              <Button
+                size="lg"
                 className="rounded-full bg-[#F59E0B] hover:bg-[#D97706] text-white px-8"
+                asChild
               >
-                Zostań twórcą →
+                <Link href="/cennik">
+                  Sprawdź plan Pro →
+                </Link>
               </Button>
             </div>
             
