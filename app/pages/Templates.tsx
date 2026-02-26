@@ -25,7 +25,6 @@ export default function Templates() {
     <div className="min-h-screen bg-white py-20">
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12">
 
-        {/* Hero */}
         <div className="text-center mb-12">
           <h1 className="font-['Playfair_Display'] text-5xl font-bold text-[#111827] mb-4">
             Wybierz szablon
@@ -35,7 +34,6 @@ export default function Templates() {
           </p>
         </div>
 
-        {/* Filtry */}
         <div className="flex flex-wrap justify-center gap-3 mb-12">
           {categories.map((cat) => (
             <button
@@ -52,7 +50,6 @@ export default function Templates() {
           ))}
         </div>
 
-        {/* Siatka */}
         <div className="grid md:grid-cols-3 gap-6 mb-12">
           {filtered.map((template) => (
             <Card key={template.id} className="group overflow-hidden border-[#E5E7EB] hover:shadow-xl transition-all">
@@ -62,7 +59,6 @@ export default function Templates() {
                   alt={template.name}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                 />
-                {/* Overlay z przyciskami */}
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                   <Button variant="secondary" size="sm" asChild>
                     <Link href={`/preview/${template.id}`} target="_blank">
@@ -76,17 +72,6 @@ export default function Templates() {
                     </Link>
                   </Button>
                 </div>
-
-                {/* Kolorowe kółka — paleta szablonu */}
-                <div className="absolute bottom-3 left-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {[template.colors.background, template.colors.accent, template.colors.primary].map((color, i) => (
-                    <div
-                      key={i}
-                      className="w-5 h-5 rounded-full border-2 border-white shadow"
-                      style={{ background: color }}
-                    />
-                  ))}
-                </div>
               </div>
 
               <div className="p-4">
@@ -96,18 +81,9 @@ export default function Templates() {
                     <Badge className="bg-[#F59E0B] text-white border-none text-xs">⭐ Premium</Badge>
                   )}
                 </div>
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-[#111827] text-lg">{template.name}</h3>
-                  <Link
-                    href={`/preview/${template.id}`}
-                    target="_blank"
-                    className="text-xs text-[#7C3AED] hover:underline flex items-center gap-1"
-                  >
-                    Podgląd <Eye className="w-3 h-3" />
-                  </Link>
-                </div>
-                {/* Mini paleta kolorów zawsze widoczna */}
-                <div className="flex gap-1 mt-3">
+                <h3 className="font-semibold text-[#111827] text-lg mb-3">{template.name}</h3>
+                {/* Paleta kolorów — tylko tutaj, bez duplikatu na hover */}
+                <div className="flex gap-1.5">
                   {[template.colors.background, template.colors.accent, template.colors.primary, template.colors.surface].map((color, i) => (
                     <div
                       key={i}
@@ -121,7 +97,6 @@ export default function Templates() {
           ))}
         </div>
 
-        {/* CTA */}
         <div className="text-center">
           <p className="text-[#6B7280] mb-4">
             Nie możesz się zdecydować? Zacznij od dowolnego — zawsze możesz zmienić styl w builderze!
