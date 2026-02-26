@@ -1,1 +1,1 @@
-export { default } from '../pages/BlogList'
+export { default } from '../components/BlogListServer'
