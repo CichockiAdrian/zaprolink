@@ -8,106 +8,104 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import {
-  GripVertical, Plus, MoreVertical, Eye, Smartphone, Monitor,
+  GripVertical, Eye, Smartphone, Monitor,
   ChevronRight, Image as ImageIcon, Type, MapPin, Calendar,
-  Link2, HelpCircle, Video, Users, Trash2, X
+  Link2, HelpCircle, Video, Users, X, Plus
 } from 'lucide-react';
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from '../components/ui/dropdown-menu';
+  DndContext, closestCenter, KeyboardSensor, PointerSensor,
+  useSensor, useSensors, DragEndEvent
+} from '@dnd-kit/core';
+import {
+  arrayMove, SortableContext, sortableKeyboardCoordinates,
+  useSortable, verticalListSortingStrategy
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { templates, templateList } from '../data/templateData';
 import type { TemplateConfig } from '../data/templateData';
 
-// ─── TYPY ────────────────────────────────────────────────────
 type ProgramItem = { time: string; event: string };
 type LinkItem = { emoji: string; label: string; url: string };
 type FaqItem = { question: string; answer: string };
 
 type SectionData = {
-  // hero
   title?: string; subtitle?: string;
-  // text
   heading?: string; body?: string;
-  // countdown
   targetDate?: string;
-  // location
   venue?: string; address?: string; mapsUrl?: string;
-  venue2?: string; address2?: string; mapsUrl2?: string; showVenue2?: boolean;
-  // program
+  venue2?: string; address2?: string; showVenue2?: boolean;
   items?: ProgramItem[];
-  // links
   links?: LinkItem[];
-  // faq
   faqs?: FaqItem[];
-  // rsvp
   rsvpDeadline?: string; askDiet?: boolean; askGuests?: boolean;
-  // video
   videoUrl?: string;
 };
 
 type Section = {
-  id: string;
-  type: string;
-  name: string;
-  icon: any;
-  enabled: boolean;
+  id: string; type: string; name: string; icon: any; enabled: boolean;
 };
 
-const initialSections: Section[] = [
-  { id: '1', type: 'hero',      name: 'Hero',         icon: ImageIcon, enabled: true  },
-  { id: '2', type: 'countdown', name: 'Odliczanie',   icon: Calendar,  enabled: true  },
-  { id: '3', type: 'text',      name: 'O nas',        icon: Type,      enabled: true  },
-  { id: '4', type: 'program',   name: 'Program dnia', icon: Calendar,  enabled: true  },
-  { id: '5', type: 'location',  name: 'Miejsca',      icon: MapPin,    enabled: true  },
-  { id: '6', type: 'video',     name: 'Wideo',        icon: Video,     enabled: false },
-  { id: '7', type: 'gallery',   name: 'Galeria',      icon: ImageIcon, enabled: false },
-  { id: '8', type: 'links',     name: 'Linki',        icon: Link2,     enabled: true  },
-  { id: '9', type: 'faq',       name: 'FAQ',          icon: HelpCircle,enabled: false },
-  { id: '10',type: 'rsvp',      name: 'RSVP',         icon: Users,     enabled: true  },
+const allSections: Section[] = [
+  { id: '1',  type: 'hero',      name: 'Hero',         icon: ImageIcon,  enabled: true  },
+  { id: '2',  type: 'countdown', name: 'Odliczanie',   icon: Calendar,   enabled: true  },
+  { id: '3',  type: 'text',      name: 'O nas',        icon: Type,       enabled: true  },
+  { id: '4',  type: 'program',   name: 'Program dnia', icon: Calendar,   enabled: true  },
+  { id: '5',  type: 'location',  name: 'Miejsca',      icon: MapPin,     enabled: true  },
+  { id: '6',  type: 'video',     name: 'Wideo',        icon: Video,      enabled: false },
+  { id: '7',  type: 'gallery',   name: 'Galeria',      icon: ImageIcon,  enabled: false },
+  { id: '8',  type: 'links',     name: 'Linki',        icon: Link2,      enabled: true  },
+  { id: '9',  type: 'faq',       name: 'FAQ',          icon: HelpCircle, enabled: false },
+  { id: '10', type: 'rsvp',      name: 'RSVP',         icon: Users,      enabled: true  },
 ];
 
-const initialData: Record<string, SectionData> = {
-  '1': { title: 'Kasia & Maciek', subtitle: '24 Czerwca 2026' },
-  '2': { targetDate: '2026-06-24' },
-  '3': { heading: 'Nasza historia', body: 'Poznaliśmy się w magiczny sposób i od tamtej chwili wiemy, że jesteśmy dla siebie.' },
-  '4': { items: [
-    { time: '15:00', event: 'Ceremonia ślubna' },
-    { time: '16:00', event: 'Sesja zdjęciowa' },
-    { time: '18:00', event: 'Przyjęcie weselne' },
-    { time: '21:00', event: 'Tort & Zabawa' },
-  ]},
-  '5': { venue: 'Dwór Kamionka', address: 'ul. Parkowa 5, Piaseczno', mapsUrl: '', showVenue2: false },
-  '6': { videoUrl: '' },
-  '8': { links: [
-    { emoji: '🛒', label: 'Lista prezentów', url: '' },
-    { emoji: '🏨', label: 'Polecane noclegi', url: '' },
-  ]},
-  '9': { faqs: [
-    { question: 'Czy mogę przyjść z dziećmi?', answer: 'Tak, dzieci są mile widziane!' },
-    { question: 'Jaki dress code obowiązuje?', answer: 'Strój elegancki lub semi-formalny.' },
-  ]},
-  '10': { rsvpDeadline: '1 maja 2026', askDiet: true, askGuests: true },
-};
+// ─── SORTABLE ROW ────────────────────────────────────────────
+function SortableSection({ section, isActive, onSelect, onToggle }: {
+  section: Section; isActive: boolean;
+  onSelect: () => void; onToggle: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : 'auto',
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}
+      className={`flex items-center gap-2 p-2.5 rounded-lg cursor-pointer transition-colors ${
+        isActive ? 'bg-[#EDE9FE]' : 'hover:bg-[#F3F4F6]'}`}
+      onClick={onSelect}>
+      {/* Uchwyt drag */}
+      <div {...attributes} {...listeners}
+        className="cursor-grab active:cursor-grabbing touch-none flex-shrink-0"
+        onClick={e => e.stopPropagation()}>
+        <GripVertical className="w-3.5 h-3.5 text-[#D1D5DB] hover:text-[#9CA3AF] transition-colors" />
+      </div>
+      <section.icon className="w-3.5 h-3.5 text-[#6B7280] flex-shrink-0" />
+      <span className="text-sm font-medium text-[#111827] flex-1 truncate">{section.name}</span>
+      <Switch checked={section.enabled}
+        onCheckedChange={onToggle}
+        onClick={e => e.stopPropagation()} />
+    </div>
+  );
+}
 
 // ─── PREVIEW SECTION ────────────────────────────────────────
-function PreviewSection({ section, data, c, f, borderRadius, isActive, onClick }: {
+function PreviewSection({ section, data, c, f, br, isActive, onClick }: {
   section: Section; data: SectionData; c: TemplateConfig['colors'];
-  f: TemplateConfig['fonts']; borderRadius: string;
-  isActive: boolean; onClick: () => void;
+  f: TemplateConfig['fonts']; br: string; isActive: boolean; onClick: () => void;
 }) {
   return (
-    <div
-      className={`relative cursor-pointer transition-all ${isActive ? 'outline outline-2 outline-[#7C3AED] outline-offset-[-2px]' : ''}`}
-      style={{ borderBottom: `1px solid ${c.border}` }}
-      onClick={onClick}
-    >
+    <div className={`relative cursor-pointer transition-all ${isActive ? 'outline outline-2 outline-[#7C3AED] outline-offset-[-2px]' : ''}`}
+      style={{ borderBottom: `1px solid ${c.border}` }} onClick={onClick}>
       {isActive && (
         <div className="absolute top-2 right-2 z-10 bg-[#7C3AED] text-white text-xs px-2 py-0.5 rounded font-medium">
           {section.name}
         </div>
       )}
 
-      {/* HERO */}
       {section.type === 'hero' && (
         <div className="text-center px-8 py-14">
           <h1 className="text-4xl md:text-5xl mb-3 leading-tight"
@@ -118,10 +116,9 @@ function PreviewSection({ section, data, c, f, borderRadius, isActive, onClick }
         </div>
       )}
 
-      {/* COUNTDOWN */}
       {section.type === 'countdown' && (
         <div className="text-center px-8 py-10">
-          <p className="text-xs uppercase tracking-widest mb-6" style={{ color: c.textMuted }}>Do ślubu pozostało</p>
+          <p className="text-xs uppercase tracking-widest mb-6" style={{ color: c.textMuted }}>Do wydarzenia pozostało</p>
           <div className="flex justify-center gap-6">
             {[['108','Dni'],['14','Godz'],['32','Min'],['45','Sek']].map(([n,l]) => (
               <div key={l} className="flex flex-col items-center">
@@ -130,13 +127,9 @@ function PreviewSection({ section, data, c, f, borderRadius, isActive, onClick }
               </div>
             ))}
           </div>
-          {data.targetDate && (
-            <p className="text-xs mt-4" style={{ color: c.textMuted }}>Data: {data.targetDate}</p>
-          )}
         </div>
       )}
 
-      {/* TEXT */}
       {section.type === 'text' && (
         <div className="px-8 py-12 max-w-xl mx-auto text-center">
           <h2 className="text-2xl mb-4" style={{ fontFamily: `'${f.heading}', serif`, color: c.primary }}>
@@ -146,7 +139,6 @@ function PreviewSection({ section, data, c, f, borderRadius, isActive, onClick }
         </div>
       )}
 
-      {/* PROGRAM */}
       {section.type === 'program' && (
         <div className="px-8 py-12 max-w-xl mx-auto">
           <h2 className="text-2xl mb-8 text-center" style={{ fontFamily: `'${f.heading}', serif`, color: c.primary }}>Program dnia</h2>
@@ -161,17 +153,16 @@ function PreviewSection({ section, data, c, f, borderRadius, isActive, onClick }
         </div>
       )}
 
-      {/* LOCATION */}
       {section.type === 'location' && (
         <div className="px-8 py-12 max-w-xl mx-auto">
           <h2 className="text-2xl mb-6 text-center" style={{ fontFamily: `'${f.heading}', serif`, color: c.primary }}>Miejsce</h2>
-          <div className="p-5 mb-3" style={{ background: c.surface, border: `1px solid ${c.border}`, borderRadius }}>
+          <div className="p-5 mb-3" style={{ background: c.surface, border: `1px solid ${c.border}`, borderRadius: br }}>
             <MapPin className="w-5 h-5 mb-2" style={{ color: c.accent }} />
             <p className="font-semibold text-sm mb-1" style={{ color: c.primary }}>{data.venue || 'Nazwa miejsca'}</p>
             <p className="text-xs" style={{ color: c.textMuted }}>{data.address || 'Adres'}</p>
           </div>
           {data.showVenue2 && data.venue2 && (
-            <div className="p-5" style={{ background: c.surface, border: `1px solid ${c.border}`, borderRadius }}>
+            <div className="p-5" style={{ background: c.surface, border: `1px solid ${c.border}`, borderRadius: br }}>
               <MapPin className="w-5 h-5 mb-2" style={{ color: c.accent }} />
               <p className="font-semibold text-sm mb-1" style={{ color: c.primary }}>{data.venue2}</p>
               <p className="text-xs" style={{ color: c.textMuted }}>{data.address2}</p>
@@ -180,42 +171,39 @@ function PreviewSection({ section, data, c, f, borderRadius, isActive, onClick }
         </div>
       )}
 
-      {/* VIDEO */}
       {section.type === 'video' && (
         <div className="px-8 py-10 text-center">
           <h2 className="text-2xl mb-4" style={{ fontFamily: `'${f.heading}', serif`, color: c.primary }}>Nasze wideo</h2>
           {data.videoUrl ? (
-            <div className="aspect-video rounded overflow-hidden" style={{ background: c.surface }}>
-              <iframe src={data.videoUrl.replace('watch?v=', 'embed/')} className="w-full h-full" allowFullScreen />
+            <div className="aspect-video rounded overflow-hidden">
+              <iframe src={data.videoUrl.replace('watch?v=','embed/')} className="w-full h-full" allowFullScreen />
             </div>
           ) : (
             <div className="aspect-video flex items-center justify-center rounded"
               style={{ background: c.surface, border: `2px dashed ${c.border}` }}>
-              <p className="text-sm" style={{ color: c.textMuted }}>Dodaj link do wideo w panelu →</p>
+              <p className="text-sm" style={{ color: c.textMuted }}>Dodaj link do wideo →</p>
             </div>
           )}
         </div>
       )}
 
-      {/* LINKS */}
       {section.type === 'links' && (
         <div className="px-8 py-10 max-w-sm mx-auto">
           <h2 className="text-2xl mb-6 text-center" style={{ fontFamily: `'${f.heading}', serif`, color: c.primary }}>Przydatne linki</h2>
           {(data.links || []).map((link, i) => (
             <div key={i} className="w-full py-3 px-4 mb-3 text-sm text-center"
-              style={{ border: `1px solid ${c.border}`, color: c.text, borderRadius }}>
+              style={{ border: `1px solid ${c.border}`, color: c.text, borderRadius: br }}>
               {link.emoji} {link.label}
             </div>
           ))}
         </div>
       )}
 
-      {/* FAQ */}
       {section.type === 'faq' && (
         <div className="px-8 py-12 max-w-xl mx-auto">
           <h2 className="text-2xl mb-8 text-center" style={{ fontFamily: `'${f.heading}', serif`, color: c.primary }}>FAQ</h2>
           {(data.faqs || []).map((faq, i) => (
-            <div key={i} className="mb-4 p-4" style={{ background: c.surface, border: `1px solid ${c.border}`, borderRadius }}>
+            <div key={i} className="mb-4 p-4" style={{ background: c.surface, border: `1px solid ${c.border}`, borderRadius: br }}>
               <p className="font-semibold text-sm mb-1" style={{ color: c.primary }}>{faq.question}</p>
               <p className="text-xs" style={{ color: c.textMuted }}>{faq.answer}</p>
             </div>
@@ -223,7 +211,6 @@ function PreviewSection({ section, data, c, f, borderRadius, isActive, onClick }
         </div>
       )}
 
-      {/* RSVP */}
       {section.type === 'rsvp' && (
         <div className="px-8 py-12 max-w-sm mx-auto">
           <h2 className="text-2xl mb-2 text-center" style={{ fontFamily: `'${f.heading}', serif`, color: c.primary }}>Potwierdzenie</h2>
@@ -232,24 +219,26 @@ function PreviewSection({ section, data, c, f, borderRadius, isActive, onClick }
           )}
           <div className="space-y-3">
             <input placeholder="Imię i nazwisko" className="w-full px-3 py-2.5 text-sm outline-none"
-              style={{ background: c.surface, border: `1px solid ${c.border}`, borderRadius, color: c.text }} />
+              style={{ background: c.surface, border: `1px solid ${c.border}`, borderRadius: br, color: c.text }} />
             {data.askGuests && (
               <input placeholder="Liczba osób" type="number" className="w-full px-3 py-2.5 text-sm outline-none"
-                style={{ background: c.surface, border: `1px solid ${c.border}`, borderRadius, color: c.text }} />
+                style={{ background: c.surface, border: `1px solid ${c.border}`, borderRadius: br, color: c.text }} />
             )}
             {data.askDiet && (
               <input placeholder="Preferencje żywieniowe (opcjonalnie)" className="w-full px-3 py-2.5 text-sm outline-none"
-                style={{ background: c.surface, border: `1px solid ${c.border}`, borderRadius, color: c.text }} />
+                style={{ background: c.surface, border: `1px solid ${c.border}`, borderRadius: br, color: c.text }} />
             )}
-            <button className="w-full py-3 text-sm font-semibold"
-              style={{ background: c.button, color: c.buttonText, borderRadius }}>
-              Potwierdzam obecność 🎉
-            </button>
+            <div className="flex gap-3 pt-1">
+              <button className="flex-1 py-3 text-sm font-semibold"
+                style={{ background: c.button, color: c.buttonText, borderRadius: br }}>✓ Będę</button>
+              <button className="flex-1 py-3 text-sm font-semibold"
+                style={{ background: 'transparent', border: `1px solid ${c.border}`, color: c.textMuted, borderRadius: br }}>
+                ✗ Nie mogę</button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* GALLERY placeholder */}
       {section.type === 'gallery' && (
         <div className="px-8 py-10 text-center">
           <h2 className="text-2xl mb-4" style={{ fontFamily: `'${f.heading}', serif`, color: c.primary }}>Galeria</h2>
@@ -268,9 +257,8 @@ function PreviewSection({ section, data, c, f, borderRadius, isActive, onClick }
 }
 
 // ─── PANEL TREŚCI ────────────────────────────────────────────
-function ContentPanel({ sectionId, sectionType, data, onChange }: {
-  sectionId: string; sectionType: string;
-  data: SectionData; onChange: (key: string, value: any) => void;
+function ContentPanel({ sectionType, data, onChange }: {
+  sectionType: string; data: SectionData; onChange: (key: string, value: any) => void;
 }) {
   if (sectionType === 'hero') return (
     <div className="space-y-4">
@@ -282,15 +270,10 @@ function ContentPanel({ sectionId, sectionType, data, onChange }: {
         <Button variant="outline" size="sm" className="w-full mt-1">Upload zdjęcia</Button></div>
     </div>
   );
-
   if (sectionType === 'countdown') return (
-    <div className="space-y-4">
-      <div><Label className="text-xs">Data wydarzenia</Label>
-        <Input type="date" className="mt-1" value={data.targetDate||''}
-          onChange={e=>onChange('targetDate',e.target.value)} /></div>
-    </div>
+    <div><Label className="text-xs">Data wydarzenia</Label>
+      <Input type="date" className="mt-1" value={data.targetDate||''} onChange={e=>onChange('targetDate',e.target.value)} /></div>
   );
-
   if (sectionType === 'text') return (
     <div className="space-y-4">
       <div><Label className="text-xs">Nagłówek</Label>
@@ -300,7 +283,6 @@ function ContentPanel({ sectionId, sectionType, data, onChange }: {
           value={data.body||''} onChange={e=>onChange('body',e.target.value)} /></div>
     </div>
   );
-
   if (sectionType === 'program') {
     const items = data.items || [];
     return (
@@ -312,22 +294,18 @@ function ContentPanel({ sectionId, sectionType, data, onChange }: {
               onChange={e=>{const n=[...items];n[i]={...n[i],time:e.target.value};onChange('items',n)}} />
             <Input className="flex-1 text-xs" placeholder="Opis" value={item.event}
               onChange={e=>{const n=[...items];n[i]={...n[i],event:e.target.value};onChange('items',n)}} />
-            <button onClick={()=>onChange('items',items.filter((_,j)=>j!==i))}
-              className="text-[#EF4444] hover:text-red-700 flex-shrink-0">
+            <button onClick={()=>onChange('items',items.filter((_,j)=>j!==i))} className="text-[#EF4444]">
               <X className="w-4 h-4" /></button>
           </div>
         ))}
         <Button variant="outline" size="sm" className="w-full"
           onClick={()=>onChange('items',[...items,{time:'',event:''}])}>
-          <Plus className="w-3 h-3 mr-1" /> Dodaj punkt
-        </Button>
+          <Plus className="w-3 h-3 mr-1" />Dodaj punkt</Button>
       </div>
     );
   }
-
   if (sectionType === 'location') return (
     <div className="space-y-4">
-      <p className="text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Ceremonia</p>
       <div><Label className="text-xs">Nazwa miejsca</Label>
         <Input className="mt-1" value={data.venue||''} onChange={e=>onChange('venue',e.target.value)} /></div>
       <div><Label className="text-xs">Adres</Label>
@@ -337,7 +315,7 @@ function ContentPanel({ sectionId, sectionType, data, onChange }: {
           onChange={e=>onChange('mapsUrl',e.target.value)} /></div>
       <div className="flex items-center gap-2 pt-2">
         <Switch checked={!!data.showVenue2} onCheckedChange={v=>onChange('showVenue2',v)} />
-        <Label className="text-xs">Drugie miejsce (np. sala weselna)</Label>
+        <Label className="text-xs">Drugie miejsce</Label>
       </div>
       {data.showVenue2 && (<>
         <div><Label className="text-xs">Nazwa 2. miejsca</Label>
@@ -347,17 +325,11 @@ function ContentPanel({ sectionId, sectionType, data, onChange }: {
       </>)}
     </div>
   );
-
   if (sectionType === 'video') return (
-    <div className="space-y-4">
-      <div><Label className="text-xs">Link YouTube / Vimeo</Label>
-        <Input className="mt-1" placeholder="https://youtube.com/watch?v=..." value={data.videoUrl||''}
-          onChange={e=>onChange('videoUrl',e.target.value)} />
-        <p className="text-xs text-[#9CA3AF] mt-1">Wklej link do filmiku</p>
-      </div>
-    </div>
+    <div><Label className="text-xs">Link YouTube / Vimeo</Label>
+      <Input className="mt-1" placeholder="https://youtube.com/watch?v=..." value={data.videoUrl||''}
+        onChange={e=>onChange('videoUrl',e.target.value)} /></div>
   );
-
   if (sectionType === 'links') {
     const links = data.links || [];
     return (
@@ -370,8 +342,8 @@ function ContentPanel({ sectionId, sectionType, data, onChange }: {
                 onChange={e=>{const n=[...links];n[i]={...n[i],emoji:e.target.value};onChange('links',n)}} />
               <Input className="flex-1 text-xs" placeholder="Nazwa" value={link.label}
                 onChange={e=>{const n=[...links];n[i]={...n[i],label:e.target.value};onChange('links',n)}} />
-              <button onClick={()=>onChange('links',links.filter((_,j)=>j!==i))}
-                className="text-[#EF4444]"><X className="w-4 h-4" /></button>
+              <button onClick={()=>onChange('links',links.filter((_,j)=>j!==i))} className="text-[#EF4444]">
+                <X className="w-4 h-4" /></button>
             </div>
             <Input className="text-xs" placeholder="https://..." value={link.url}
               onChange={e=>{const n=[...links];n[i]={...n[i],url:e.target.value};onChange('links',n)}} />
@@ -379,12 +351,10 @@ function ContentPanel({ sectionId, sectionType, data, onChange }: {
         ))}
         <Button variant="outline" size="sm" className="w-full"
           onClick={()=>onChange('links',[...links,{emoji:'🔗',label:'Nowy link',url:''}])}>
-          <Plus className="w-3 h-3 mr-1" /> Dodaj link
-        </Button>
+          <Plus className="w-3 h-3 mr-1" />Dodaj link</Button>
       </div>
     );
   }
-
   if (sectionType === 'faq') {
     const faqs = data.faqs || [];
     return (
@@ -395,8 +365,8 @@ function ContentPanel({ sectionId, sectionType, data, onChange }: {
             <div className="flex gap-2">
               <Input className="flex-1 text-xs" placeholder="Pytanie..." value={faq.question}
                 onChange={e=>{const n=[...faqs];n[i]={...n[i],question:e.target.value};onChange('faqs',n)}} />
-              <button onClick={()=>onChange('faqs',faqs.filter((_,j)=>j!==i))}
-                className="text-[#EF4444]"><X className="w-4 h-4" /></button>
+              <button onClick={()=>onChange('faqs',faqs.filter((_,j)=>j!==i))} className="text-[#EF4444]">
+                <X className="w-4 h-4" /></button>
             </div>
             <textarea className="w-full p-2 border border-[#E5E7EB] rounded text-xs resize-none min-h-[60px]"
               placeholder="Odpowiedź..." value={faq.answer}
@@ -405,12 +375,10 @@ function ContentPanel({ sectionId, sectionType, data, onChange }: {
         ))}
         <Button variant="outline" size="sm" className="w-full"
           onClick={()=>onChange('faqs',[...faqs,{question:'',answer:''}])}>
-          <Plus className="w-3 h-3 mr-1" /> Dodaj pytanie
-        </Button>
+          <Plus className="w-3 h-3 mr-1" />Dodaj pytanie</Button>
       </div>
     );
   }
-
   if (sectionType === 'rsvp') return (
     <div className="space-y-4">
       <div><Label className="text-xs">Deadline odpowiedzi</Label>
@@ -426,44 +394,82 @@ function ContentPanel({ sectionId, sectionType, data, onChange }: {
       </div>
     </div>
   );
-
   if (sectionType === 'gallery') return (
-    <div className="space-y-3">
-      <p className="text-sm text-[#6B7280]">Galeria zdjęć</p>
-      <Button variant="outline" size="sm" className="w-full">Upload zdjęć</Button>
-    </div>
+    <Button variant="outline" size="sm" className="w-full">Upload zdjęć</Button>
   );
-
   return <p className="text-sm text-[#6B7280]">Wybierz sekcję aby edytować</p>;
 }
 
 // ─── GŁÓWNY KOMPONENT ────────────────────────────────────────
 function BuilderInner() {
   const searchParams = useSearchParams();
-  const templateId = searchParams.get('template') || 'elegant';
+  const templateId    = searchParams.get('template') || 'elegant';
+  const eventName     = searchParams.get('name')     || 'Kasia & Maciek';
+  const eventDate     = searchParams.get('date')     || '2026-06-24';
+  const eventLocation = searchParams.get('location') || '';
+
+  const formatDate = (d: string) => {
+    if (!d) return '';
+    const parts = d.split('-');
+    if (parts.length !== 3) return d;
+    const months = ['','stycznia','lutego','marca','kwietnia','maja','czerwca','lipca','sierpnia','września','października','listopada','grudnia'];
+    return `${parseInt(parts[2])} ${months[parseInt(parts[1])]} ${parts[0]}`;
+  };
 
   const [currentTemplate, setCurrentTemplate] = useState<TemplateConfig>(
     templates[templateId] || templates['elegant']
   );
-  const [sections, setSections] = useState<Section[]>(initialSections);
+  const [sections, setSections] = useState<Section[]>(allSections);
   const [activeSection, setActiveSection] = useState<string>('1');
   const [previewMode, setPreviewMode] = useState<'mobile' | 'desktop'>('mobile');
-  const [sectionData, setSectionData] = useState<Record<string, SectionData>>(initialData);
+  const [sectionData, setSectionData] = useState<Record<string, SectionData>>({
+    '1':  { title: eventName, subtitle: formatDate(eventDate) },
+    '2':  { targetDate: eventDate },
+    '3':  { heading: 'Nasza historia', body: 'Poznaliśmy się w magiczny sposób i od tamtej chwili wiemy, że jesteśmy dla siebie.' },
+    '4':  { items: [
+      { time: '15:00', event: 'Ceremonia' },
+      { time: '16:00', event: 'Sesja zdjęciowa' },
+      { time: '18:00', event: 'Przyjęcie' },
+      { time: '21:00', event: 'Tort & Zabawa' },
+    ]},
+    '5':  { venue: eventLocation || 'Dwór Kamionka', address: '', mapsUrl: '', showVenue2: false },
+    '6':  { videoUrl: '' },
+    '8':  { links: [
+      { emoji: '🛒', label: 'Lista prezentów', url: '' },
+      { emoji: '🏨', label: 'Polecane noclegi', url: '' },
+    ]},
+    '9':  { faqs: [
+      { question: 'Czy mogę przyjść z dziećmi?', answer: 'Tak, dzieci są mile widziane!' },
+      { question: 'Jaki dress code obowiązuje?', answer: 'Strój elegancki lub semi-formalny.' },
+    ]},
+    '10': { rsvpDeadline: '1 maja 2026', askDiet: true, askGuests: true },
+  });
 
-  const c = currentTemplate.colors;
-  const f = currentTemplate.fonts;
+  const c  = currentTemplate.colors;
+  const f  = currentTemplate.fonts;
   const br = currentTemplate.decorations.borderRadius;
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setSections(s => {
+        const oldIndex = s.findIndex(x => x.id === active.id);
+        const newIndex = s.findIndex(x => x.id === over.id);
+        return arrayMove(s, oldIndex, newIndex);
+      });
+    }
+  };
 
   const toggleSection = (id: string) =>
     setSections(s => s.map(x => x.id === id ? { ...x, enabled: !x.enabled } : x));
 
   const updateData = (sectionId: string, key: string, value: any) =>
     setSectionData(prev => ({ ...prev, [sectionId]: { ...prev[sectionId], [key]: value } }));
-
-  const deleteSection = (id: string) => {
-    setSections(s => s.filter(x => x.id !== id));
-    setActiveSection(sections.find(s => s.id !== id)?.id || '');
-  };
 
   const activeSecObj = sections.find(s => s.id === activeSection);
 
@@ -483,7 +489,7 @@ function BuilderInner() {
           <div className="flex items-center gap-2 text-sm text-[#6B7280]">
             <Link href="/dashboard" className="hover:text-[#111827]">Moje projekty</Link>
             <ChevronRight className="w-3.5 h-3.5" />
-            <span className="text-[#111827] font-medium">Kasia & Maciek</span>
+            <span className="text-[#111827] font-medium">{eventName}</span>
           </div>
         </div>
         <div className="flex items-center gap-5">
@@ -506,37 +512,22 @@ function BuilderInner() {
       </div>
 
       <div className="flex-1 flex overflow-hidden">
-        {/* Lewy panel */}
-        <div className="w-[240px] bg-white border-r border-[#E5E7EB] overflow-y-auto flex-shrink-0">
+        {/* Lewy panel z drag & drop */}
+        <div className="w-[220px] bg-white border-r border-[#E5E7EB] overflow-y-auto flex-shrink-0">
           <div className="p-3">
             <p className="text-xs font-semibold text-[#6B7280] uppercase tracking-wider mb-3 px-1">Sekcje</p>
-            <div className="space-y-1">
-              {sections.map((section) => (
-                <div key={section.id}
-                  className={`flex items-center gap-2 p-2.5 rounded-lg cursor-pointer transition-colors ${
-                    activeSection === section.id ? 'bg-[#EDE9FE]' : 'hover:bg-[#F3F4F6]'}`}
-                  onClick={() => setActiveSection(section.id)}>
-                  <GripVertical className="w-3.5 h-3.5 text-[#D1D5DB] flex-shrink-0" />
-                  <section.icon className="w-3.5 h-3.5 text-[#6B7280] flex-shrink-0" />
-                  <span className="text-sm font-medium text-[#111827] flex-1 truncate">{section.name}</span>
-                  <Switch checked={section.enabled} onCheckedChange={() => toggleSection(section.id)}
-                    onClick={e => e.stopPropagation()} />
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
-                      <button className="p-0.5 hover:bg-white rounded">
-                        <MoreVertical className="w-3.5 h-3.5 text-[#9CA3AF]" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem className="text-[#EF4444]" onClick={() => deleteSection(section.id)}>Usuń</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={sections.map(s => s.id)} strategy={verticalListSortingStrategy}>
+                <div className="space-y-1">
+                  {sections.map(section => (
+                    <SortableSection key={section.id} section={section}
+                      isActive={activeSection === section.id}
+                      onSelect={() => setActiveSection(section.id)}
+                      onToggle={() => toggleSection(section.id)} />
+                  ))}
                 </div>
-              ))}
-            </div>
-            <Button variant="outline" className="w-full mt-3" size="sm">
-              <Plus className="w-3.5 h-3.5 mr-1.5" />Dodaj sekcję
-            </Button>
+              </SortableContext>
+            </DndContext>
           </div>
         </div>
 
@@ -557,7 +548,7 @@ function BuilderInner() {
             style={{ background: c.background, fontFamily: `'${f.body}', sans-serif` }}>
             {sections.filter(s => s.enabled).map(section => (
               <PreviewSection key={section.id} section={section}
-                data={sectionData[section.id] || {}} c={c} f={f} borderRadius={br}
+                data={sectionData[section.id] || {}} c={c} f={f} br={br}
                 isActive={activeSection === section.id}
                 onClick={() => setActiveSection(section.id)} />
             ))}
@@ -577,15 +568,10 @@ function BuilderInner() {
               <TabsContent value="content">
                 {activeSecObj ? (
                   <>
-                    <p className="text-xs font-semibold text-[#6B7280] uppercase tracking-wider mb-4">
-                      {activeSecObj.name}
-                    </p>
-                    <ContentPanel
-                      sectionId={activeSection}
-                      sectionType={activeSecObj.type}
+                    <p className="text-xs font-semibold text-[#6B7280] uppercase tracking-wider mb-4">{activeSecObj.name}</p>
+                    <ContentPanel sectionType={activeSecObj.type}
                       data={sectionData[activeSection] || {}}
-                      onChange={(key, val) => updateData(activeSection, key, val)}
-                    />
+                      onChange={(key, val) => updateData(activeSection, key, val)} />
                   </>
                 ) : (
                   <p className="text-sm text-[#6B7280]">Wybierz sekcję aby edytować</p>
@@ -595,7 +581,7 @@ function BuilderInner() {
               <TabsContent value="style" className="space-y-5">
                 <p className="text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Kolory — {currentTemplate.name}</p>
                 <div className="space-y-3">
-                  {([['Tło','background'],['Akcent','accent'],['Tekst','primary'],['Przycisk','button']] as [string,keyof typeof c][]).map(([label,key])=>(
+                  {([['Tło','background'],['Akcent','accent'],['Tekst','primary'],['Przycisk','button']] as [string, keyof typeof c][]).map(([label,key])=>(
                     <div key={key} className="flex items-center justify-between">
                       <span className="text-sm text-[#374151]">{label}</span>
                       <div className="flex items-center gap-2">
@@ -608,11 +594,16 @@ function BuilderInner() {
                 <div className="pt-2 border-t border-[#E5E7EB]">
                   <p className="text-xs font-semibold text-[#6B7280] uppercase tracking-wider mb-2">Czcionki</p>
                   <div className="space-y-1.5">
-                    <div className="flex justify-between"><span className="text-sm text-[#374151]">Nagłówki</span><span className="text-xs text-[#9CA3AF]">{f.heading}</span></div>
-                    <div className="flex justify-between"><span className="text-sm text-[#374151]">Treść</span><span className="text-xs text-[#9CA3AF]">{f.body}</span></div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-[#374151]">Nagłówki</span>
+                      <span className="text-xs text-[#9CA3AF]">{f.heading}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-[#374151]">Treść</span>
+                      <span className="text-xs text-[#9CA3AF]">{f.body}</span>
+                    </div>
                   </div>
                 </div>
-                <p className="text-xs text-[#9CA3AF]">Zmień styl w zakładce Szablon.</p>
               </TabsContent>
 
               <TabsContent value="template" className="space-y-2">
@@ -632,7 +623,7 @@ function BuilderInner() {
                       ))}
                     </div>
                     {currentTemplate.id===tmpl.id && (
-                      <div className="w-4 h-4 rounded-full bg-[#7C3AED] flex items-center justify-center">
+                      <div className="w-4 h-4 rounded-full bg-[#7C3AED] flex items-center justify-center flex-shrink-0">
                         <span className="text-white text-[8px]">✓</span>
                       </div>
                     )}
@@ -640,15 +631,6 @@ function BuilderInner() {
                 ))}
               </TabsContent>
             </Tabs>
-
-            {activeSecObj && (
-              <div className="mt-6 pt-4 border-t border-[#E5E7EB]">
-                <Button variant="destructive" size="sm" className="w-full"
-                  onClick={() => { if(confirm('Usunąć sekcję?')) deleteSection(activeSection); }}>
-                  <Trash2 className="w-3.5 h-3.5 mr-2" />Usuń sekcję
-                </Button>
-              </div>
-            )}
           </div>
         </div>
       </div>
