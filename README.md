@@ -1,36 +1,104 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 💌 Zaprolink
 
-## Getting Started
+> **"Shopify dla eventów"** — inteligentny kreator stron-zaproszeń dla ślubów, urodzin i eventów firmowych.
 
-First, run the development server:
+Zamiast drukować papierowe zaproszenia, użytkownicy Zaprolink tworzą interaktywne mini-strony www z RSVP, mapą, galerią zdjęć i wideo — i wysyłają je gościom jednym linkiem lub kodem QR.
+
+## 📌 Problem, który rozwiązujemy
+
+Papierowe zaproszenia są drogie, nieekologiczne i niemożliwe do edycji po wydruku. Obecne rozwiązania cyfrowe w Polsce są albo zbyt proste (tylko śluby), albo bardzo drogie (średnio 150 zł za stronę). **Zaprolink wypełnia lukę cenową i technologiczną.**
+
+- ✅ Goście potwierdzają obecność jednym kliknięciem, a organizator widzi w panelu kto przyjdzie, kto potrzebuje noclegu i kto ma specjalną dietę
+- 🗺️ W zaproszenie wbudowana jest mapa Google Maps — gość klika "Dojazd" i od razu otwiera mu się nawigacja w telefonie
+
+## ✨ Funkcje
+
+### Dla organizatora
+- 🛠️ **Builder drag & drop** — gotowe sekcje (tekst, zdjęcia, wideo, mapa, RSVP, licznik) układane przeciąganiem
+- 🎨 **Szablony** — galeria gotowych projektów dla ślubów, urodzin, baby shower i eventów firmowych
+- 📊 **Dashboard RSVP** — lista gości z filtrowaniem, eksport do CSV, statystyki obecności
+- 🔗 **Unikalny link + kod QR** — zaproszenie dostępne pod własną subdomeną (np. `twoje-wesele.zaprolink.pl`)
+- 👁️ **Podgląd live** — natychmiastowy podgląd strony przed opublikowaniem
+- 🌐 **Blog** — artykuły i inspiracje dla organizatorów eventów
+
+### Dla gościa
+- Strona zaproszenia bez rejestracji, otwierana bezpośrednio przez link
+- RSVP jednym kliknięciem z opcjami (przyjdzie / nie przyjdzie / potrzebuję nocleg / dieta)
+- Wbudowana nawigacja Google Maps do miejsca wydarzenia
+
+## 💰 Pakiety i cennik
+
+| Plan | Cena | Zawiera |
+|---|---|---|
+| **Standard** | 29 zł | Podstawowe zaproszenie, RSVP, mapa |
+| **Plus** | 49 zł | Builder wideo, galeria zdjęć, zaawansowany RSVP |
+| **Premium** | 89 zł | Live Photo Wall, własna subdomena, brak reklam |
+
+> Płatność jednorazowa za gotą stronę zaproszenia.
+
+## 🎪 Marketplace "Twórz i Zarabiaj"
+
+Platforma dla grafików i designerów. Twórca wykupuje konto (200 zł/rok), tworzy unikalne szablony w builderze i sprzedaje je tysiącom użytkowników. Zaprolink pobiera **25% prowizji** od każdego sprzedanego szablonu.
+
+## 🚀 Roadmapa
+
+- 🔜 **Faza 1** — MVP dla ślubów i urodzin *(w toku)*
+- 🟡 **Faza 2** — Uruchomienie Marketplace dla designerów
+- 🔵 **Faza 3** — Skalowanie na eventy firmowe i webinary
+
+## 🛠️ Tech stack
+
+| Warstwa | Technologia |
+|---|---|
+| Framework | Next.js 16 + React 19 |
+| Język | TypeScript |
+| Stylowanie | Tailwind CSS v4 |
+| Komponenty UI | Radix UI + shadcn/ui |
+| Backend / DB | Supabase (PostgreSQL + Auth + Storage) |
+| Animacje | Framer Motion |
+| Drag & Drop | @dnd-kit |
+| Karuzela | Embla Carousel |
+| Wykresy | Recharts |
+| Treści | gray-matter + remark (Markdown/MDX) |
+| Konfetti 🎉 | react-confetti |
+
+## 🚀 Uruchomienie lokalne
 
 ```bash
+git clone https://github.com/CichockiAdrian/zaprolink
+cd zaprolink
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Otwórz [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## ⚙️ Zmienne środowiskowe
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Utwórz plik `.env.local` i dodaj:
 
-## Learn More
+```env
+NEXT_PUBLIC_SUPABASE_URL=twoj_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=twoj_anon_key
+```
 
-To learn more about Next.js, take a look at the following resources:
+## 📁 Struktura projektu
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+app/
+  [slug]/         # Publiczna strona zaproszenia (np. /wesele-adriana)
+  auth/           # Logowanie i rejestracja
+  blog/           # Blog z inspiracjami
+  builder/        # Kreator zaproszenia (drag & drop)
+  cennik/         # Strona cennika
+  dashboard/      # Panel organizatora (RSVP, statystyki)
+  onboarding/     # Onboarding nowego użytkownika
+  preview/[id]/   # Podgląd live zaproszenia
+  szablony/       # Galeria szablów
+content/blog/     # Pliki Markdown artykułów
+public/           # Statyczne assety
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Made by [@CichockiAdrian](https://github.com/CichockiAdrian)
