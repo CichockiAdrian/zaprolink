@@ -160,7 +160,7 @@ export default function OnboardingTemplate() {
           <Button 
             variant="outline" 
             size="lg"
-            onClick={() => navigate('/onboarding/okazja')}
+            onClick={() => router.push('/onboarding/okazja')}
           >
             ← Wróć
           </Button>
