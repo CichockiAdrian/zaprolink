@@ -241,7 +241,7 @@ export default function PublicInvitation() {
               { emoji: '📸', text: 'Instagram pary' },
             ].map((link, i) => (
               <Button key={i} variant="outline" className="w-full justify-between text-left h-auto py-4" asChild>
-                <a href="#" target="_blank" rel="noopener noreferrer">
+                <a href="/kontakt">
                   <span className="flex items-center gap-3">
                     <span className="text-2xl">{link.emoji}</span>
                     <span className="font-medium">{link.text}</span>

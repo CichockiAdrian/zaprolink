@@ -30,7 +30,8 @@ const plans = [
       'Ścianka zdjęć live',
     ],
     buttonText: 'Wybierz Starter',
-    buttonLink: '/kreator',
+    buttonLink: '/onboarding/okazja',
+    planId: 'starter' as const,
   },
   {
     name: 'Plus',
@@ -54,7 +55,8 @@ const plans = [
       'Custom subdomena',
     ],
     buttonText: 'Wybierz Plus',
-    buttonLink: '/kreator',
+    buttonLink: '/onboarding/okazja',
+    planId: 'plus' as const,
   },
   {
     name: 'Pro',
@@ -80,7 +82,8 @@ const plans = [
     ],
     notIncluded: [],
     buttonText: 'Wybierz Pro',
-    buttonLink: '/kreator',
+    buttonLink: '/onboarding/okazja',
+    planId: 'pro' as const,
     cancelNote: 'Anuluj subskrypcję w każdej chwili',
   },
 ];
@@ -223,7 +226,7 @@ export default function Pricing() {
       </section>
 
       {/* FAQ */}
-      <section className="max-w-3xl mx-auto px-6 py-16">
+      <section id="faq" className="max-w-3xl mx-auto px-6 py-16">
         <h2 className="text-3xl font-bold text-[#111827] text-center mb-2 font-['Playfair_Display']">
           Najczęściej zadawane pytania
         </h2>

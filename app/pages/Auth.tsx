@@ -1,28 +1,110 @@
 'use client'
 import { useState } from 'react';
 import { useRouter } from 'next/navigation'
+import Link from 'next/link';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Checkbox } from '../components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Card } from '../components/ui/card';
+import { createSupabaseBrowserClient } from '../lib/supabase/client';
 
 export default function Auth() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [registerEmail, setRegisterEmail] = useState('');
+  const [registerPassword, setRegisterPassword] = useState('');
+  const [registerPasswordConfirm, setRegisterPasswordConfirm] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const getSupabase = () => {
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) {
+      setAuthError('Brakuje konfiguracji Supabase Auth w zmiennych środowiskowych.');
+      return null;
+    }
+    return supabase;
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock login - redirect to dashboard
+    setIsLoading(true);
+    setAuthError(null);
+
+    const supabase = getSupabase();
+    if (!supabase) {
+      setIsLoading(false);
+      return;
+    }
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setIsLoading(false);
+
+    if (error) {
+      setAuthError(error.message);
+      return;
+    }
+
     router.push('/dashboard');
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock register - redirect to dashboard
+    setAuthError(null);
+
+    if (registerPassword !== registerPasswordConfirm) {
+      setAuthError('Hasła nie są takie same.');
+      return;
+    }
+
+    setIsLoading(true);
+    const supabase = getSupabase();
+    if (!supabase) {
+      setIsLoading(false);
+      return;
+    }
+
+    const { error } = await supabase.auth.signUp({
+      email: registerEmail,
+      password: registerPassword,
+      options: {
+        emailRedirectTo: `${window.location.origin}/dashboard`,
+      },
+    });
+    setIsLoading(false);
+
+    if (error) {
+      setAuthError(error.message);
+      return;
+    }
+
     router.push('/dashboard');
+  };
+
+  const handleGoogleAuth = async () => {
+    setIsLoading(true);
+    setAuthError(null);
+
+    const supabase = getSupabase();
+    if (!supabase) {
+      setIsLoading(false);
+      return;
+    }
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
+    });
+
+    if (error) {
+      setAuthError(error.message);
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -87,18 +169,22 @@ export default function Auth() {
                         Zapamiętaj mnie
                       </label>
                     </div>
-                    <a href="#" className="text-sm text-[#7C3AED] hover:underline">
+                    <Link href="/kontakt" className="text-sm text-[#7C3AED] hover:underline">
                       Zapomniałem hasła
-                    </a>
+                    </Link>
                   </div>
 
                   <Button 
                     type="submit" 
+                    disabled={isLoading}
                     className="w-full bg-[#7C3AED] hover:bg-[#5B21B6]"
                   >
-                    Zaloguj się
+                    {isLoading ? 'Logowanie...' : 'Zaloguj się'}
                   </Button>
                 </form>
+                {authError && (
+                  <p className="mt-4 text-sm text-red-600">{authError}</p>
+                )}
 
                 <div className="relative my-6">
                   <div className="absolute inset-0 flex items-center">
@@ -113,7 +199,8 @@ export default function Auth() {
                   type="button" 
                   variant="outline" 
                   className="w-full"
-                  onClick={handleLogin}
+                  disabled={isLoading}
+                  onClick={handleGoogleAuth}
                 >
                   <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -140,6 +227,8 @@ export default function Auth() {
                       id="register-email" 
                       type="email" 
                       placeholder="twoj@email.pl"
+                      value={registerEmail}
+                      onChange={(e) => setRegisterEmail(e.target.value)}
                       required
                       className="mt-1"
                     />
@@ -150,6 +239,8 @@ export default function Auth() {
                     <Input 
                       id="register-password" 
                       type="password"
+                      value={registerPassword}
+                      onChange={(e) => setRegisterPassword(e.target.value)}
                       required
                       className="mt-1"
                     />
@@ -160,6 +251,8 @@ export default function Auth() {
                     <Input 
                       id="register-password-confirm" 
                       type="password"
+                      value={registerPasswordConfirm}
+                      onChange={(e) => setRegisterPasswordConfirm(e.target.value)}
                       required
                       className="mt-1"
                     />
@@ -169,23 +262,27 @@ export default function Auth() {
                     <Checkbox id="terms" required className="mt-1" />
                     <label htmlFor="terms" className="text-sm text-[#6B7280] cursor-pointer">
                       Akceptuję{' '}
-                      <a href="#" className="text-[#7C3AED] hover:underline">
+                      <Link href="/regulamin" className="text-[#7C3AED] hover:underline">
                         regulamin
-                      </a>{' '}
+                      </Link>{' '}
                       i{' '}
-                      <a href="#" className="text-[#7C3AED] hover:underline">
+                      <Link href="/polityka-prywatnosci" className="text-[#7C3AED] hover:underline">
                         politykę prywatności
-                      </a>
+                      </Link>
                     </label>
                   </div>
 
                   <Button 
                     type="submit" 
+                    disabled={isLoading}
                     className="w-full bg-[#7C3AED] hover:bg-[#5B21B6]"
                   >
-                    Załóż konto
+                    {isLoading ? 'Tworzenie konta...' : 'Załóż konto'}
                   </Button>
                 </form>
+                {authError && (
+                  <p className="mt-4 text-sm text-red-600">{authError}</p>
+                )}
 
                 <div className="relative my-6">
                   <div className="absolute inset-0 flex items-center">
@@ -200,7 +297,8 @@ export default function Auth() {
                   type="button" 
                   variant="outline" 
                   className="w-full"
-                  onClick={handleRegister}
+                  disabled={isLoading}
+                  onClick={handleGoogleAuth}
                 >
                   <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>

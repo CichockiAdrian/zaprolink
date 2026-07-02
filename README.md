@@ -14,6 +14,7 @@ Papierowe zaproszenia są drogie, nieekologiczne i niemożliwe do edycji po wydr
 ## ✨ Funkcje
 
 ### Dla organizatora
+
 - 🛠️ **Builder drag & drop** — gotowe sekcje (tekst, zdjęcia, wideo, mapa, RSVP, licznik) układane przeciąganiem
 - 🎨 **Szablony** — galeria gotowych projektów dla ślubów, urodzin, baby shower i eventów firmowych
 - 📊 **Dashboard RSVP** — lista gości z filtrowaniem, eksport do CSV, statystyki obecności
@@ -22,6 +23,7 @@ Papierowe zaproszenia są drogie, nieekologiczne i niemożliwe do edycji po wydr
 - 🌐 **Blog** — artykuły i inspiracje dla organizatorów eventów
 
 ### Dla gościa
+
 - Strona zaproszenia bez rejestracji, otwierana bezpośrednio przez link
 - RSVP jednym kliknięciem z opcjami (przyjdzie / nie przyjdzie / potrzebuję nocleg / dieta)
 - Wbudowana nawigacja Google Maps do miejsca wydarzenia
@@ -30,15 +32,15 @@ Papierowe zaproszenia są drogie, nieekologiczne i niemożliwe do edycji po wydr
 
 | Plan | Cena | Zawiera |
 |---|---|---|
-| **Standard** | 29 zł | Podstawowe zaproszenie, RSVP, mapa |
-| **Plus** | 49 zł | Builder wideo, galeria zdjęć, zaawansowany RSVP |
-| **Premium** | 89 zł | Live Photo Wall, własna subdomena, brak reklam |
+| **Starter** | 29 zł | Podstawowe zaproszenie, RSVP, mapa |
+| **Plus** | 59 zł | Builder wideo, galeria zdjęć, zaawansowany RSVP |
+| **Pro** | 89 zł / miesiąc | Live Photo Wall, własna subdomena, brak reklam |
 
-> Płatność jednorazowa za gotą stronę zaproszenia.
+> Starter i Plus są płatnościami jednorazowymi. Pro działa jako subskrypcja.
 
 ## 🎪 Marketplace "Twórz i Zarabiaj"
 
-Platforma dla grafików i designerów. Twórca wykupuje konto (200 zł/rok), tworzy unikalne szablony w builderze i sprzedaje je tysiącom użytkowników. Zaprolink pobiera **25% prowizji** od każdego sprzedanego szablonu.
+Platforma dla grafików i designerów. Twórca wykupuje konto, tworzy unikalne szablony w builderze i sprzedaje je użytkownikom. Zaprolink pobiera prowizję od każdego sprzedanego szablonu.
 
 ## 🚀 Roadmapa
 
@@ -55,6 +57,7 @@ Platforma dla grafików i designerów. Twórca wykupuje konto (200 zł/rok), two
 | Stylowanie | Tailwind CSS v4 |
 | Komponenty UI | Radix UI + shadcn/ui |
 | Backend / DB | Supabase (PostgreSQL + Auth + Storage) |
+| Płatności | Stripe Checkout + Stripe Webhooks |
 | Animacje | Framer Motion |
 | Drag & Drop | @dnd-kit |
 | Karuzela | Embla Carousel |
@@ -71,33 +74,73 @@ npm install
 npm run dev
 ```
 
-Otwórz [http://localhost:3000](http://localhost:3000)
+Otwórz [http://localhost:3000](http://localhost:3000).
 
 ## ⚙️ Zmienne środowiskowe
 
-Utwórz plik `.env.local` i dodaj:
+Skopiuj `.env.example` do `.env.local` i uzupełnij wartości:
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=twoj_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=twoj_anon_key
+```bash
+cp .env.example .env.local
 ```
+
+Wymagane zmienne:
+
+- `NEXT_PUBLIC_APP_URL` - publiczny adres aplikacji, np. `https://zaprolink.pl`
+- `NEXT_PUBLIC_SUPABASE_URL` - URL projektu Supabase dla auth
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - publiczny klucz anon Supabase dla auth
+- `STRIPE_SECRET_KEY` - sekretny klucz Stripe
+- `STRIPE_WEBHOOK_SECRET` - sekret podpisu webhooka Stripe
+- `STRIPE_PRICE_STARTER` - Stripe Price ID dla Starter, płatność jednorazowa
+- `STRIPE_PRICE_PLUS` - Stripe Price ID dla Plus, płatność jednorazowa
+- `STRIPE_PRICE_PRO` - Stripe Price ID dla Pro, cena cykliczna miesięczna
+
+Płatności używają Stripe Checkout przez `POST /api/checkout`.
+Webhook Stripe działa pod `POST /api/stripe/webhook`; zasubskrybuj event `checkout.session.completed`.
+Logowanie i rejestracja używają Supabase Auth na `/auth`.
+
+## 🚢 Produkcja / Vercel
+
+1. Ustaw zmienne środowiskowe w Vercel.
+2. Skonfiguruj Supabase Auth site URL i redirect URLs dla domeny produkcyjnej.
+3. Dodaj `https://twoja-domena.pl/api/stripe/webhook` w Stripe webhooks i zasubskrybuj `checkout.session.completed`.
+4. Build command: `npm run build`.
+5. Health check: `/api/health`.
+
+Przed przejściem na live w Stripe sprawdź produkty/ceny live mode, dane firmy, podatki, metody płatności i politykę zwrotów.
 
 ## 📁 Struktura projektu
 
-```
+```text
 app/
-  [slug]/         # Publiczna strona zaproszenia (np. /wesele-adriana)
-  auth/           # Logowanie i rejestracja
-  blog/           # Blog z inspiracjami
-  builder/        # Kreator zaproszenia (drag & drop)
-  cennik/         # Strona cennika
-  dashboard/      # Panel organizatora (RSVP, statystyki)
-  onboarding/     # Onboarding nowego użytkownika
-  preview/[id]/   # Podgląd live zaproszenia
-  szablony/       # Galeria szablów
-content/blog/     # Pliki Markdown artykułów
-public/           # Statyczne assety
+  [slug]/                 # Publiczna strona zaproszenia
+  api/checkout/           # Stripe Checkout Session
+  api/stripe/webhook/     # Stripe webhook z weryfikacją podpisu
+  auth/                   # Logowanie i rejestracja
+  blog/                   # Blog z inspiracjami
+  builder/                # Kreator zaproszenia
+  cennik/                 # Strona cennika
+  dashboard/              # Panel organizatora
+  onboarding/             # Onboarding nowego użytkownika
+  platnosc/               # Strony sukces/anulowanie płatności
+  preview/[id]/           # Podgląd live zaproszenia
+  szablony/               # Galeria szablonów
+content/blog/             # Pliki Markdown artykułów
+public/                   # Statyczne assety
 ```
+
+## Scripts
+
+```bash
+npm run dev
+npm run lint
+npm run build
+npm run start
+```
+
+## Notes
+
+Repo zawiera UI aplikacji, publiczny podgląd zaproszenia, Supabase Auth, Stripe Checkout, weryfikację webhooka Stripe i notatki wdrożeniowe pod Vercel. Trwałe przechowywanie zaproszeń, RSVP i aktywacja planu po webhooku wymagają jeszcze spięcia z bazą danych przed sprzedażą realnym klientom na większą skalę.
 
 ---
 

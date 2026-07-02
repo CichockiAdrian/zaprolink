@@ -1,7 +1,10 @@
+'use client'
+
 import Link from 'next/link';
+import { useState } from 'react';
 import { Check, X } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
+import type { CheckoutPlanId } from '../lib/plans';
 
 interface PricingCardProps {
   name: string;
@@ -15,6 +18,7 @@ interface PricingCardProps {
   notIncluded?: string[];
   buttonText: string;
   buttonLink: string;
+  planId?: CheckoutPlanId;
   badge?: string;
   note?: string;
   cancelNote?: string;
@@ -33,12 +37,39 @@ export default function PricingCard({
   notIncluded = [],
   buttonText,
   buttonLink,
+  planId,
   badge,
   note,
   cancelNote,
-  highlight = false,
 }: PricingCardProps) {
   const isMonthly = period.includes('miesiąc');
+  const [isLoading, setIsLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
+  const startCheckout = async () => {
+    if (!planId) return;
+
+    setIsLoading(true);
+    setCheckoutError(null);
+
+    try {
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: planId }),
+      });
+      const data = await response.json() as { url?: unknown; error?: string };
+
+      if (!response.ok || typeof data.url !== 'string') {
+        throw new Error(data.error || 'Nie udało się rozpocząć płatności.');
+      }
+
+      window.location.href = data.url;
+    } catch (error) {
+      setCheckoutError(error instanceof Error ? error.message : 'Nie udało się rozpocząć płatności.');
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div
@@ -90,8 +121,11 @@ export default function PricingCard({
       {!periodSub && <div className="mb-6" />}
 
       {/* CTA Button */}
-      <Link href={buttonLink} className="mb-4">
+      {planId ? (
         <Button
+          type="button"
+          disabled={isLoading}
+          onClick={startCheckout}
           className={`w-full rounded-xl font-semibold py-2.5 ${
             popular
               ? 'bg-purple-600 hover:bg-purple-700 text-white'
@@ -101,9 +135,30 @@ export default function PricingCard({
           }`}
           variant={popular ? 'default' : 'outline'}
         >
-          {buttonText}
+          {isLoading ? 'Przekierowuję...' : buttonText}
         </Button>
-      </Link>
+      ) : (
+        <Link href={buttonLink} className="mb-4">
+          <Button
+            className={`w-full rounded-xl font-semibold py-2.5 ${
+              popular
+                ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                : badge
+                ? 'border-gray-800 text-gray-900 hover:bg-gray-900 hover:text-white'
+                : ''
+            }`}
+            variant={popular ? 'default' : 'outline'}
+          >
+            {buttonText}
+          </Button>
+        </Link>
+      )}
+      {checkoutError && (
+        <p className="mt-2 mb-4 text-xs text-red-600">
+          {checkoutError}
+        </p>
+      )}
+      {!checkoutError && planId && <div className="mb-4" />}
 
       {/* Note pod przyciskiem */}
       {note && (

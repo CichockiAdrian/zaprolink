@@ -54,8 +54,8 @@ export function Footer() {
             <h4 className="font-semibold mb-4">Pomoc</h4>
             <ul className="space-y-2">
               <li><Link href="/blog" className="text-[#9CA3AF] hover:text-white transition-colors">Blog</Link></li>
-              <li><a href="#" className="text-[#9CA3AF] hover:text-white transition-colors">FAQ</a></li>
-              <li><a href="#" className="text-[#9CA3AF] hover:text-white transition-colors">Kontakt</a></li>
+              <li><Link href="/cennik#faq" className="text-[#9CA3AF] hover:text-white transition-colors">FAQ</Link></li>
+              <li><Link href="/kontakt" className="text-[#9CA3AF] hover:text-white transition-colors">Kontakt</Link></li>
             </ul>
           </div>
         </div>
@@ -66,8 +66,8 @@ export function Footer() {
             © 2026 Zaprolink. Wszystkie prawa zastrzeżone.
           </div>
           <div className="flex gap-6">
-            <a href="#" className="hover:text-white transition-colors">Polityka prywatności</a>
-            <a href="#" className="hover:text-white transition-colors">Regulamin</a>
+            <Link href="/polityka-prywatnosci" className="hover:text-white transition-colors">Polityka prywatności</Link>
+            <Link href="/regulamin" className="hover:text-white transition-colors">Regulamin</Link>
           </div>
         </div>
       </div>
