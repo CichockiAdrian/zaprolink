@@ -53,10 +53,12 @@ export default function PricingCard({
     setCheckoutError(null);
 
     try {
+      const savedInvitations = JSON.parse(window.localStorage.getItem('zaprolink_invitations') || '[]') as { id?: unknown }[];
+      const invitationId = typeof savedInvitations[0]?.id === 'string' ? savedInvitations[0].id : undefined;
       const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan: planId }),
+        body: JSON.stringify({ plan: planId, invitationId }),
       });
       const data = await response.json() as { url?: unknown; error?: string };
 

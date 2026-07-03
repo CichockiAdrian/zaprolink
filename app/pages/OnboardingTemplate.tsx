@@ -1,63 +1,24 @@
 'use client'
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Check, ExternalLink } from 'lucide-react';
+import { templates, templateList } from '../data/templateData';
 
-const templates = [
-  { 
-    id: 'elegant', 
-    name: 'Elegant', 
-    style: 'Klasyczny', 
-    preview: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=400',
-    isPremium: false 
-  },
-  { 
-    id: 'modern', 
-    name: 'Modern', 
-    style: 'Nowoczesny', 
-    preview: 'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=400',
-    isPremium: false 
-  },
-  { 
-    id: 'floral', 
-    name: 'Kwiatowy', 
-    style: 'Romantyczny', 
-    preview: 'https://images.unsplash.com/photo-1478146896981-b80fe463b330?w=400',
-    isPremium: false 
-  },
-  { 
-    id: 'dark', 
-    name: 'Dark', 
-    style: 'Elegancki', 
-    preview: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=400',
-    isPremium: true 
-  },
-  { 
-    id: 'pastel', 
-    name: 'Pastel', 
-    style: 'Delikatny', 
-    preview: 'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=400',
-    isPremium: false 
-  },
-  { 
-    id: 'minimal', 
-    name: 'Minimal', 
-    style: 'Minimalistyczny', 
-    preview: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=400',
-    isPremium: true 
-  },
-];
-
-export default function OnboardingTemplate() {
-  const [selected, setSelected] = useState<string | null>(null);
+function OnboardingTemplateInner() {
+  const searchParams = useSearchParams();
   const router = useRouter();
+  const initialTemplate = searchParams.get('template');
+  const occasion = searchParams.get('occasion') || 'wedding';
+  const [selected, setSelected] = useState<string>(
+    initialTemplate && templates[initialTemplate] ? initialTemplate : 'elegant'
+  );
 
   const handleNext = () => {
     if (selected) {
-      router.push('/onboarding/edycja');
+      router.push(`/onboarding/edycja?template=${selected}&occasion=${occasion}`);
     }
   };
 
@@ -100,7 +61,7 @@ export default function OnboardingTemplate() {
 
         {/* Grid */}
         <div className="grid md:grid-cols-3 gap-6 mb-12">
-          {templates.map((template) => (
+          {templateList.map((template) => (
             <Card
               key={template.id}
               onClick={() => setSelected(template.id)}
@@ -160,7 +121,7 @@ export default function OnboardingTemplate() {
           <Button 
             variant="outline" 
             size="lg"
-            onClick={() => router.push('/onboarding/okazja')}
+            onClick={() => router.push(`/onboarding/okazja?template=${selected}`)}
           >
             ← Wróć
           </Button>
@@ -175,5 +136,13 @@ export default function OnboardingTemplate() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function OnboardingTemplate() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-[#6B7280]">Ładowanie...</div>}>
+      <OnboardingTemplateInner />
+    </Suspense>
   );
 }

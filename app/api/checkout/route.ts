@@ -69,6 +69,7 @@ export async function POST(request: Request) {
     headers: {
       Authorization: `Bearer ${stripeSecretKey}`,
       'Content-Type': 'application/x-www-form-urlencoded',
+      'Stripe-Version': '2026-02-25.clover',
     },
     body: params,
   });

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { CheckCircle2 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { checkoutPlans, isCheckoutPlanId } from '../../lib/plans';
+import PaymentSuccessClient from './PaymentSuccessClient';
 
 export default async function PaymentSuccessPage({
   searchParams,
@@ -9,10 +10,12 @@ export default async function PaymentSuccessPage({
   searchParams: Promise<{ plan?: string; session_id?: string }>;
 }) {
   const { plan, session_id: sessionId } = await searchParams;
-  const planName = isCheckoutPlanId(plan) ? checkoutPlans[plan].name : 'Zaprolink';
+  const activePlan = isCheckoutPlanId(plan) ? plan : null;
+  const planName = activePlan ? checkoutPlans[activePlan].name : 'Zaprolink';
 
   return (
     <section className="min-h-[70vh] flex items-center justify-center px-6 py-20 bg-[#F9FAFB]">
+      <PaymentSuccessClient plan={activePlan} sessionId={sessionId || null} />
       <div className="max-w-xl text-center">
         <CheckCircle2 className="w-16 h-16 text-[#10B981] mx-auto mb-6" />
         <h1 className="font-['Playfair_Display'] text-4xl font-bold text-[#111827] mb-4">

@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
@@ -12,6 +12,8 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '../components/ui/table';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { createSupabaseBrowserClient } from '../lib/supabase/client';
+import { checkoutPlans, isCheckoutPlanId } from '../lib/plans';
 
 const mockInvitations = [
   { id: '1', name: 'Kasia & Maciek', type: 'Ślub',     status: 'active', rsvp: 24, date: '2026-06-24', slug: 'kasia-i-maciek' },
@@ -38,14 +40,134 @@ const navItems = [
   { id: 'qr',          label: 'QR & Link',   icon: QrCode   },
 ];
 
+type StoredInvitation = {
+  id: string;
+  name: string;
+  type: string;
+  status: 'draft' | 'active';
+  rsvp: number;
+  date: string;
+  slug: string;
+};
+
+type StoredRsvp = {
+  id: string;
+  invitationSlug: string;
+  name: string;
+  response: 'Tak' | 'Nie' | 'Może';
+  guests: number;
+  date: string;
+};
+
+type ActivePlan = {
+  plan?: unknown;
+  sessionId?: unknown;
+  activatedAt?: unknown;
+};
+
+const readStorage = <T,>(key: string, fallback: T): T => {
+  if (typeof window === 'undefined') return fallback;
+  try {
+    const raw = window.localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+const downloadFile = (filename: string, content: string, type: string) => {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+};
+
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('invitations');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [invitations, setInvitations] = useState<StoredInvitation[]>(mockInvitations as StoredInvitation[]);
+  const [rsvps, setRsvps] = useState<StoredRsvp[]>(mockRSVPs as StoredRsvp[]);
+  const [copiedValue, setCopiedValue] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState('demo@zaprolink.pl');
+  const [activePlanName, setActivePlanName] = useState('Demo');
+
+  useEffect(() => {
+    const queryTab = new URLSearchParams(window.location.search).get('tab');
+    if (queryTab && navItems.some(item => item.id === queryTab)) {
+      setActiveTab(queryTab);
+    }
+
+    const savedInvitations = readStorage<StoredInvitation[]>('zaprolink_invitations', []);
+    const savedRsvps = readStorage<StoredRsvp[]>('zaprolink_rsvps', []);
+    const activePlan = readStorage<ActivePlan | null>('zaprolink_active_plan', null);
+    setInvitations(savedInvitations.length ? savedInvitations : mockInvitations as StoredInvitation[]);
+    setRsvps(savedRsvps.length ? savedRsvps : mockRSVPs as StoredRsvp[]);
+    if (activePlan && isCheckoutPlanId(activePlan.plan)) {
+      setActivePlanName(checkoutPlans[activePlan.plan].name);
+    }
+
+    const supabase = createSupabaseBrowserClient();
+    if (supabase) {
+      supabase.auth.getUser().then(({ data }) => {
+        if (data.user?.email) setUserEmail(data.user.email);
+      });
+    }
+  }, []);
 
   const handleNav = (id: string) => {
     setActiveTab(id);
     setSidebarOpen(false);
   };
+
+  const handleLogout = async () => {
+    const supabase = createSupabaseBrowserClient();
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
+    window.location.href = '/auth';
+  };
+
+  const getPublicLink = (slug: string) => {
+    const origin = typeof window === 'undefined' ? 'https://zaprolink.pl' : window.location.origin;
+    return `${origin}/${slug}`;
+  };
+
+  const copyLink = async (slug: string) => {
+    const link = getPublicLink(slug);
+    await navigator.clipboard.writeText(link);
+    setCopiedValue(slug);
+    window.setTimeout(() => setCopiedValue(null), 1800);
+  };
+
+  const exportCsv = () => {
+    const rows = [
+      ['Imie i nazwisko', 'Osoby', 'Odpowiedz', 'Data'],
+      ...rsvps.map(rsvp => [rsvp.name, String(rsvp.guests), rsvp.response, rsvp.date]),
+    ];
+    const csv = rows
+      .map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    downloadFile('zaprolink-rsvp.csv', csv, 'text/csv;charset=utf-8');
+  };
+
+  const downloadQrSvg = () => {
+    const firstInvitation = invitations[0];
+    const link = getPublicLink(firstInvitation?.slug || 'kasia-i-maciek');
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><rect width="512" height="512" fill="#fff"/><rect x="48" y="48" width="416" height="416" rx="28" fill="#f3f4f6" stroke="#111827" stroke-width="12"/><text x="256" y="236" text-anchor="middle" font-family="Arial" font-size="30" font-weight="700" fill="#111827">Zaprolink</text><text x="256" y="282" text-anchor="middle" font-family="Arial" font-size="18" fill="#4b5563">${link}</text><text x="256" y="330" text-anchor="middle" font-family="Arial" font-size="16" fill="#7c3aed">Otworz link i wygeneruj QR do druku</text></svg>`;
+    downloadFile('zaprolink-link.svg', svg, 'image/svg+xml');
+  };
+
+  const printQr = () => {
+    window.print();
+  };
+
+  const confirmed = rsvps.filter(rsvp => rsvp.response === 'Tak').reduce((sum, rsvp) => sum + rsvp.guests, 0);
+  const declined = rsvps.filter(rsvp => rsvp.response === 'Nie').length;
+  const totalRsvp = rsvps.length;
+  const firstPublicLink = getPublicLink(invitations[0]?.slug || 'kasia-i-maciek');
 
   return (
     <div className="min-h-screen bg-[#F9FAFB]">
@@ -82,8 +204,8 @@ export default function Dashboard() {
               <div className="w-12 h-12 bg-[#EDE9FE] rounded-full flex items-center justify-center mb-3">
                 <User className="w-6 h-6 text-[#7C3AED]" />
               </div>
-              <p className="font-medium text-[#111827] text-sm truncate">kasia@example.com</p>
-              <Badge className="mt-2 bg-[#F59E0B] text-white border-none text-xs">Plus</Badge>
+              <p className="font-medium text-[#111827] text-sm truncate">{userEmail}</p>
+              <Badge className="mt-2 bg-[#F59E0B] text-white border-none text-xs">{activePlanName}</Badge>
             </div>
 
             {/* Nav */}
@@ -101,7 +223,7 @@ export default function Dashboard() {
             </nav>
 
             <div className="pt-4 border-t border-[#E5E7EB]">
-              <Button variant="ghost" size="sm" className="w-full justify-start text-[#6B7280]">
+              <Button variant="ghost" size="sm" className="w-full justify-start text-[#6B7280]" onClick={handleLogout}>
                 <LogOut className="w-4 h-4 mr-3" />Wyloguj
               </Button>
             </div>
@@ -125,7 +247,7 @@ export default function Dashboard() {
                 </Button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-                {mockInvitations.map((inv) => (
+                {invitations.map((inv) => (
                   <Card key={inv.id} className="overflow-hidden border-[#E5E7EB]">
                     <div className="aspect-video bg-gradient-to-br from-[#7C3AED] to-[#5B21B6] flex items-center justify-center">
                       <span className="font-['Playfair_Display'] text-xl sm:text-2xl font-bold text-white text-center px-4">{inv.name}</span>
@@ -151,8 +273,13 @@ export default function Dashboard() {
                         <Button size="sm" variant="outline" asChild>
                           <Link href={`/${inv.slug}`} target="_blank"><Eye className="w-3 h-3" /></Link>
                         </Button>
-                        <Button size="sm" variant="outline"><Copy className="w-3 h-3" /></Button>
+                        <Button size="sm" variant="outline" onClick={() => copyLink(inv.slug)} aria-label="Kopiuj link">
+                          <Copy className="w-3 h-3" />
+                        </Button>
                       </div>
+                      {copiedValue === inv.slug && (
+                        <p className="text-xs text-[#10B981] mt-2">Link skopiowany</p>
+                      )}
                     </div>
                   </Card>
                 ))}
@@ -165,16 +292,16 @@ export default function Dashboard() {
             <div>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
                 <h1 className="font-['Playfair_Display'] text-2xl sm:text-3xl font-bold text-[#111827]">RSVP Dashboard</h1>
-                <Button variant="outline" className="w-full sm:w-auto">
+                <Button variant="outline" className="w-full sm:w-auto" onClick={exportCsv}>
                   <Download className="w-4 h-4 mr-2" />Eksportuj CSV
                 </Button>
               </div>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
                 {[
-                  { label: 'Zaproszeni',       value: '50', color: 'text-[#7C3AED]' },
-                  { label: 'Potwierdzeni',      value: '24', color: 'text-green-600' },
-                  { label: 'Odmowy',            value: '3',  color: 'text-red-500'   },
-                  { label: 'Brak odpowiedzi',   value: '23', color: 'text-gray-500'  },
+                  { label: 'Odpowiedzi',        value: String(totalRsvp), color: 'text-[#7C3AED]' },
+                  { label: 'Potwierdzeni',      value: String(confirmed), color: 'text-green-600' },
+                  { label: 'Odmowy',            value: String(declined),  color: 'text-red-500'   },
+                  { label: 'Aktywne zaproszenia', value: String(invitations.filter(inv => inv.status === 'active').length), color: 'text-gray-500' },
                 ].map((stat, i) => (
                   <Card key={i} className="p-4">
                     <p className="text-xs sm:text-sm text-[#6B7280] mb-1">{stat.label}</p>
@@ -195,7 +322,7 @@ export default function Dashboard() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {mockRSVPs.map((rsvp) => (
+                      {rsvps.map((rsvp) => (
                         <TableRow key={rsvp.id}>
                           <TableCell className="font-medium text-sm">{rsvp.name}</TableCell>
                           <TableCell className="text-sm">{rsvp.guests}</TableCell>
@@ -225,10 +352,10 @@ export default function Dashboard() {
                 <Card className="p-5 sm:p-6 border-[#E5E7EB]">
                   <h3 className="font-semibold text-[#111827] mb-4">Unikalny link</h3>
                   <div className="flex flex-col sm:flex-row gap-2">
-                    <input type="text" value="https://zaprolink.pl/kasia-i-maciek" readOnly
+                    <input type="text" value={firstPublicLink} readOnly
                       className="flex-1 px-4 py-2 border border-[#E5E7EB] rounded-lg bg-[#F9FAFB] text-sm min-w-0" />
-                    <Button className="w-full sm:w-auto flex-shrink-0">
-                      <Copy className="w-4 h-4 mr-2" />Kopiuj
+                    <Button className="w-full sm:w-auto flex-shrink-0" onClick={() => copyLink(invitations[0]?.slug || 'kasia-i-maciek')}>
+                      <Copy className="w-4 h-4 mr-2" />{copiedValue ? 'Skopiowano' : 'Kopiuj'}
                     </Button>
                   </div>
                 </Card>
@@ -239,8 +366,8 @@ export default function Dashboard() {
                       <QrCode className="w-24 h-24 sm:w-32 sm:h-32 text-[#9CA3AF]" />
                     </div>
                     <div className="flex gap-3 w-full sm:w-auto">
-                      <Button variant="outline" className="flex-1 sm:flex-none">Pobierz PNG</Button>
-                      <Button variant="outline" className="flex-1 sm:flex-none">Pobierz PDF</Button>
+                      <Button variant="outline" className="flex-1 sm:flex-none" onClick={downloadQrSvg}>Pobierz SVG</Button>
+                      <Button variant="outline" className="flex-1 sm:flex-none" onClick={printQr}>Drukuj PDF</Button>
                     </div>
                   </div>
                 </Card>

@@ -19,6 +19,7 @@ export default function Auth() {
   const [registerPasswordConfirm, setRegisterPasswordConfirm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [authMessage, setAuthMessage] = useState<string | null>(null);
 
   const getSupabase = () => {
     const supabase = createSupabaseBrowserClient();
@@ -33,6 +34,7 @@ export default function Auth() {
     e.preventDefault();
     setIsLoading(true);
     setAuthError(null);
+    setAuthMessage(null);
 
     const supabase = getSupabase();
     if (!supabase) {
@@ -54,6 +56,7 @@ export default function Auth() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
+    setAuthMessage(null);
 
     if (registerPassword !== registerPasswordConfirm) {
       setAuthError('Hasła nie są takie same.');
@@ -71,7 +74,7 @@ export default function Auth() {
       email: registerEmail,
       password: registerPassword,
       options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
       },
     });
     setIsLoading(false);
@@ -84,9 +87,41 @@ export default function Auth() {
     router.push('/dashboard');
   };
 
+  const handlePasswordReset = async () => {
+    setIsLoading(true);
+    setAuthError(null);
+    setAuthMessage(null);
+
+    const targetEmail = email.trim();
+    if (!targetEmail) {
+      setAuthError('Wpisz email w polu logowania, a wyślę link resetujący hasło.');
+      setIsLoading(false);
+      return;
+    }
+
+    const supabase = getSupabase();
+    if (!supabase) {
+      setIsLoading(false);
+      return;
+    }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(targetEmail, {
+      redirectTo: `${window.location.origin}/auth/callback?next=/auth/update-password`,
+    });
+    setIsLoading(false);
+
+    if (error) {
+      setAuthError(error.message);
+      return;
+    }
+
+    setAuthMessage('Wysłaliśmy link do zmiany hasła. Sprawdź skrzynkę email.');
+  };
+
   const handleGoogleAuth = async () => {
     setIsLoading(true);
     setAuthError(null);
+    setAuthMessage(null);
 
     const supabase = getSupabase();
     if (!supabase) {
@@ -97,7 +132,7 @@ export default function Auth() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
       },
     });
 
@@ -169,9 +204,9 @@ export default function Auth() {
                         Zapamiętaj mnie
                       </label>
                     </div>
-                    <Link href="/kontakt" className="text-sm text-[#7C3AED] hover:underline">
+                    <button type="button" onClick={handlePasswordReset} className="text-sm text-[#7C3AED] hover:underline">
                       Zapomniałem hasła
-                    </Link>
+                    </button>
                   </div>
 
                   <Button 
@@ -184,6 +219,9 @@ export default function Auth() {
                 </form>
                 {authError && (
                   <p className="mt-4 text-sm text-red-600">{authError}</p>
+                )}
+                {authMessage && (
+                  <p className="mt-4 text-sm text-[#10B981]">{authMessage}</p>
                 )}
 
                 <div className="relative my-6">
@@ -282,6 +320,9 @@ export default function Auth() {
                 </form>
                 {authError && (
                   <p className="mt-4 text-sm text-red-600">{authError}</p>
+                )}
+                {authMessage && (
+                  <p className="mt-4 text-sm text-[#10B981]">{authMessage}</p>
                 )}
 
                 <div className="relative my-6">

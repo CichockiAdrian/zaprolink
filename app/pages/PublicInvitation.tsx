@@ -23,6 +23,7 @@ export default function PublicInvitation() {
   const [submitted, setSubmitted] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [guests, setGuests] = useState(1);
+  const [response, setResponse] = useState<'yes' | 'no'>('yes');
   
   // Password protection settings - in real app, this would come from invitation data
   const [isPasswordProtected] = useState(false); // Set to true to enable password gate
@@ -36,6 +37,31 @@ export default function PublicInvitation() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const form = e.currentTarget as HTMLFormElement;
+    const formData = new FormData(form);
+    const name = String(formData.get('name') || '').trim();
+    const message = String(formData.get('message') || '').trim();
+    const existing = (() => {
+      try {
+        return JSON.parse(window.localStorage.getItem('zaprolink_rsvps') || '[]');
+      } catch {
+        return [];
+      }
+    })();
+    const invitationSlug = window.location.pathname.replace(/^\//, '') || 'kasia-i-maciek';
+
+    window.localStorage.setItem('zaprolink_rsvps', JSON.stringify([
+      {
+        id: `${Date.now()}`,
+        invitationSlug,
+        name: name || 'Gość',
+        response: response === 'yes' ? 'Tak' : 'Nie',
+        guests,
+        message,
+        date: new Date().toISOString().slice(0, 10),
+      },
+      ...existing,
+    ]));
     setSubmitted(true);
     setShowConfetti(true);
     setTimeout(() => setShowConfetti(false), 5000);
@@ -218,9 +244,11 @@ export default function PublicInvitation() {
                 <div className="h-48 bg-[#F3F4F6] rounded-lg mb-4 flex items-center justify-center">
                   <MapPin className="w-12 h-12 text-[#9CA3AF]" />
                 </div>
-                <Button variant="outline" className="w-full">
-                  <Navigation className="w-4 h-4 mr-2" />
-                  Nawiguj
+                <Button variant="outline" className="w-full" asChild>
+                  <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.address)}`} target="_blank" rel="noreferrer">
+                    <Navigation className="w-4 h-4 mr-2" />
+                    Nawiguj
+                  </a>
                 </Button>
               </Card>
             ))}
@@ -335,7 +363,7 @@ export default function PublicInvitation() {
 
                 <div>
                   <Label className="text-[#111827] mb-3 block">Będziesz? *</Label>
-                  <RadioGroup defaultValue="yes" required>
+                  <RadioGroup defaultValue="yes" required onValueChange={(value) => setResponse(value === 'no' ? 'no' : 'yes')}>
                     <div className="flex items-center space-x-2 p-3 border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]">
                       <RadioGroupItem value="yes" id="yes" />
                       <Label htmlFor="yes" className="flex-1 cursor-pointer">

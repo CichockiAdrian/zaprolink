@@ -98,11 +98,15 @@ Wymagane zmienne:
 Płatności używają Stripe Checkout przez `POST /api/checkout`.
 Webhook Stripe działa pod `POST /api/stripe/webhook`; zasubskrybuj event `checkout.session.completed`.
 Logowanie i rejestracja używają Supabase Auth na `/auth`.
+Google OAuth wraca przez `/auth/callback`, a reset hasła przez `/auth/update-password`.
 
 ## 🚢 Produkcja / Vercel
 
 1. Ustaw zmienne środowiskowe w Vercel.
-2. Skonfiguruj Supabase Auth site URL i redirect URLs dla domeny produkcyjnej.
+2. Skonfiguruj Supabase Auth:
+   - Site URL: `https://twoja-domena.pl`
+   - Redirect URLs: `https://twoja-domena.pl/auth/callback` oraz `https://twoja-domena.pl/auth/update-password`
+   - Włącz provider Google i wklej Google OAuth Client ID/Secret w panelu Supabase.
 3. Dodaj `https://twoja-domena.pl/api/stripe/webhook` w Stripe webhooks i zasubskrybuj `checkout.session.completed`.
 4. Build command: `npm run build`.
 5. Health check: `/api/health`.

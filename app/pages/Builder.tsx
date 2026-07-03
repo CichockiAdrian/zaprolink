@@ -1,5 +1,5 @@
 'use client'
-import { useState, Suspense } from 'react';
+import { useCallback, useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '../components/ui/button';
@@ -37,12 +37,58 @@ type SectionData = {
   items?: ProgramItem[];
   links?: LinkItem[];
   faqs?: FaqItem[];
+  backgroundImage?: string;
+  galleryImages?: string[];
   rsvpDeadline?: string; askDiet?: boolean; askGuests?: boolean;
   videoUrl?: string;
 };
 
 type Section = {
   id: string; type: string; name: string; icon: any; enabled: boolean;
+};
+
+type StoredInvitation = {
+  id: string;
+  name: string;
+  type: string;
+  status: 'draft' | 'active';
+  rsvp: number;
+  date: string;
+  slug: string;
+  template: string;
+  occasion: string;
+  location: string;
+  updatedAt: string;
+};
+
+const STORAGE_KEY = 'zaprolink_invitations';
+
+const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'zaproszenie';
+
+const readInvitations = (): StoredInvitation[] => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+};
+
+const writeInvitation = (invitation: StoredInvitation) => {
+  if (typeof window === 'undefined') return;
+  const existing = readInvitations();
+  const next = [
+    invitation,
+    ...existing.filter(item => item.id !== invitation.id && item.slug !== invitation.slug),
+  ];
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
 };
 
 const allSections: Section[] = [
@@ -107,7 +153,14 @@ function PreviewSection({ section, data, c, f, br, isActive, onClick }: {
       )}
 
       {section.type === 'hero' && (
-        <div className="text-center px-8 py-14">
+        <div
+          className="relative text-center px-8 py-14 overflow-hidden"
+          style={data.backgroundImage ? {
+            backgroundImage: `linear-gradient(rgba(255,255,255,.72), rgba(255,255,255,.72)), url(${data.backgroundImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          } : undefined}
+        >
           <h1 className="text-4xl md:text-5xl mb-3 leading-tight"
             style={{ fontFamily: `'${f.heading}', serif`, color: c.primary }}>
             {data.title || 'Twój Tytuł'}
@@ -243,12 +296,14 @@ function PreviewSection({ section, data, c, f, br, isActive, onClick }: {
         <div className="px-8 py-10 text-center">
           <h2 className="text-2xl mb-4" style={{ fontFamily: `'${f.heading}', serif`, color: c.primary }}>Galeria</h2>
           <div className="grid grid-cols-3 gap-2">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="aspect-square rounded flex items-center justify-center"
-                style={{ background: c.surface, border: `2px dashed ${c.border}` }}>
-                <ImageIcon className="w-5 h-5" style={{ color: c.border }} />
-              </div>
-            ))}
+            {data.galleryImages?.length ? data.galleryImages.map((src, i) => (
+              <img key={i} src={src} alt={`Zdjęcie ${i + 1}`} className="aspect-square rounded object-cover w-full" />
+            )) : [...Array(6)].map((_, i) => (
+                <div key={i} className="aspect-square rounded flex items-center justify-center"
+                  style={{ background: c.surface, border: `2px dashed ${c.border}` }}>
+                  <ImageIcon className="w-5 h-5" style={{ color: c.border }} />
+                </div>
+              ))}
           </div>
         </div>
       )}
@@ -260,6 +315,12 @@ function PreviewSection({ section, data, c, f, br, isActive, onClick }: {
 function ContentPanel({ sectionType, data, onChange }: {
   sectionType: string; data: SectionData; onChange: (key: string, value: any) => void;
 }) {
+  const readImage = (file: File, done: (value: string) => void) => {
+    const reader = new FileReader();
+    reader.onload = () => done(String(reader.result || ''));
+    reader.readAsDataURL(file);
+  };
+
   if (sectionType === 'hero') return (
     <div className="space-y-4">
       <div><Label className="text-xs">Tytuł</Label>
@@ -267,7 +328,16 @@ function ContentPanel({ sectionType, data, onChange }: {
       <div><Label className="text-xs">Podtytuł / Data</Label>
         <Input className="mt-1" value={data.subtitle||''} onChange={e=>onChange('subtitle',e.target.value)} /></div>
       <div><Label className="text-xs">Zdjęcie tła</Label>
-        <Button variant="outline" size="sm" className="w-full mt-1">Upload zdjęcia</Button></div>
+        <Input
+          type="file"
+          accept="image/*"
+          className="mt-1"
+          onChange={e => {
+            const file = e.target.files?.[0];
+            if (file) readImage(file, value => onChange('backgroundImage', value));
+          }}
+        />
+      </div>
     </div>
   );
   if (sectionType === 'countdown') return (
@@ -395,7 +465,27 @@ function ContentPanel({ sectionType, data, onChange }: {
     </div>
   );
   if (sectionType === 'gallery') return (
-    <Button variant="outline" size="sm" className="w-full">Upload zdjęć</Button>
+    <div className="space-y-3">
+      <Label className="text-xs">Zdjęcia w galerii</Label>
+      <Input
+        type="file"
+        accept="image/*"
+        multiple
+        onChange={e => {
+          const files = Array.from(e.target.files || []).slice(0, 9);
+          const images: string[] = [];
+          files.forEach(file => readImage(file, value => {
+            images.push(value);
+            if (images.length === files.length) onChange('galleryImages', images);
+          }));
+        }}
+      />
+      {data.galleryImages?.length ? (
+        <p className="text-xs text-[#10B981]">Dodano zdjęć: {data.galleryImages.length}</p>
+      ) : (
+        <p className="text-xs text-[#6B7280]">Możesz dodać do 9 zdjęć.</p>
+      )}
+    </div>
   );
   return <p className="text-sm text-[#6B7280]">Wybierz sekcję aby edytować</p>;
 }
@@ -404,9 +494,12 @@ function ContentPanel({ sectionType, data, onChange }: {
 function BuilderInner() {
   const searchParams = useSearchParams();
   const templateId    = searchParams.get('template') || 'elegant';
+  const occasion      = searchParams.get('occasion') || 'wedding';
   const eventName     = searchParams.get('name')     || 'Kasia & Maciek';
   const eventDate     = searchParams.get('date')     || '2026-06-24';
   const eventLocation = searchParams.get('location') || '';
+  const projectId     = searchParams.get('id')       || slugify(`${eventName}-${eventDate}`);
+  const publicSlug    = slugify(eventName);
 
   const formatDate = (d: string) => {
     if (!d) return '';
@@ -422,6 +515,7 @@ function BuilderInner() {
   const [sections, setSections] = useState<Section[]>(allSections);
   const [activeSection, setActiveSection] = useState<string>('1');
   const [previewMode, setPreviewMode] = useState<'mobile' | 'desktop'>('mobile');
+  const [saveState, setSaveState] = useState<'saved' | 'saving' | 'published'>('saved');
   const [sectionData, setSectionData] = useState<Record<string, SectionData>>({
     '1':  { title: eventName, subtitle: formatDate(eventDate) },
     '2':  { targetDate: eventDate },
@@ -473,6 +567,40 @@ function BuilderInner() {
 
   const activeSecObj = sections.find(s => s.id === activeSection);
 
+  const saveInvitation = useCallback((status: StoredInvitation['status']) => {
+    const currentTitle = sectionData['1']?.title || eventName;
+    const currentDate = sectionData['2']?.targetDate || eventDate;
+    const currentLocation = sectionData['5']?.venue || eventLocation;
+    writeInvitation({
+      id: projectId,
+      name: currentTitle,
+      type: occasion === 'birthday' ? 'Urodziny' : occasion === 'corporate' ? 'Event' : 'Ślub',
+      status,
+      rsvp: 0,
+      date: currentDate,
+      slug: slugify(currentTitle),
+      template: currentTemplate.id,
+      occasion,
+      location: currentLocation || '',
+      updatedAt: new Date().toISOString(),
+    });
+  }, [currentTemplate.id, eventDate, eventLocation, eventName, occasion, projectId, sectionData]);
+
+  useEffect(() => {
+    setSaveState('saving');
+    const timeout = window.setTimeout(() => {
+      saveInvitation('draft');
+      setSaveState('saved');
+    }, 500);
+
+    return () => window.clearTimeout(timeout);
+  }, [saveInvitation, sections]);
+
+  const publishInvitation = () => {
+    saveInvitation('active');
+    setSaveState('published');
+  };
+
   return (
     <div className="h-screen flex flex-col bg-[#F9FAFB]">
       <link href={currentTemplate.fonts.headingUrl} rel="stylesheet" />
@@ -500,14 +628,15 @@ function BuilderInner() {
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5 text-sm text-[#10B981]">
-            <div className="w-2 h-2 bg-[#10B981] rounded-full" />Zapisano
+            <div className="w-2 h-2 bg-[#10B981] rounded-full" />
+            {saveState === 'saving' ? 'Zapisywanie...' : saveState === 'published' ? 'Opublikowano' : 'Zapisano'}
           </div>
           <Button variant="ghost" size="sm" asChild>
-            <Link href="/kasia-i-maciek" target="_blank">
+            <Link href={`/${publicSlug}`} target="_blank">
               <Eye className="w-4 h-4 mr-1.5" />Podgląd publiczny
             </Link>
           </Button>
-          <Button size="sm" className="bg-[#7C3AED] hover:bg-[#5B21B6]">Opublikuj</Button>
+          <Button size="sm" onClick={publishInvitation} className="bg-[#7C3AED] hover:bg-[#5B21B6]">Opublikuj</Button>
         </div>
       </div>
 

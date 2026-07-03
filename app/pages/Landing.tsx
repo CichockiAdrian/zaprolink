@@ -214,8 +214,8 @@ export default function Landing() {
                 <span className="text-4xl sm:text-5xl font-bold">200 zł</span>
                 <span className="text-white/80">/ rok</span>
               </div>
-              <Button size="lg" className="rounded-full bg-[#F59E0B] hover:bg-[#D97706] text-white px-8 w-full sm:w-auto">
-                Zostań twórcą →
+              <Button size="lg" className="rounded-full bg-[#F59E0B] hover:bg-[#D97706] text-white px-8 w-full sm:w-auto" asChild>
+                <Link href="/blog/tworzenie-i-sprzedaz-zaproszen">Zostań twórcą →</Link>
               </Button>
             </div>
             <div>
